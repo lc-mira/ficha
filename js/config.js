@@ -14,7 +14,7 @@
  *   - Sin esas restricciones, cualquiera podría copiarla y gastar tu cuota.
  */
 window.FICHA_CONFIG = {
-  API_KEY: 'PENDIENTE_API_KEY_RESTRINGIDA_A_ficha.miraleads.pro',
+  API_KEY: 'AIzaSyC-0QPRPjfeksjRDD8bU2oswr8lwGZg_S4',
 
   MARCA:     'Mira Leads',
   MARCA_URL: 'https://miraleads.pro',
