@@ -250,6 +250,47 @@
   /* =============================================================
    * 5. INTERACCIÓN
    * ============================================================= */
+  /** Singular/plural simple: plural(2,'baño') → "2 baños". */
+  function plural(n, palabra) { return n + ' ' + palabra + (Number(n) === 1 ? '' : 's'); }
+
+  /** Link canónico de la ficha: sin parámetros ajenos (fbclid, utm…) y siempre con ?codigo=. */
+  function linkCanonico() {
+    const sheet  = param('sheet').trim();
+    const codigo = (param('codigo') || param('id')).trim();
+    return window.location.origin + '/?sheet=' + encodeURIComponent(sheet) + '&codigo=' + encodeURIComponent(codigo);
+  }
+
+  /**
+   * Mensaje listo para pegar en WhatsApp. Solo usa datos públicos de la
+   * lista blanca (nunca captación, link externo ni datos de contacto).
+   * OJO: functions/_lib/inmueble.js arma el título de la vista previa con la
+   * misma lógica; si cambias uno, cambia el otro.
+   */
+  function mensajeCompartir(inm) {
+    const precio = aNumero(inm.precio);
+    const canon  = aNumero(inm.canon);
+    const srv = norm(inm.servicio);
+    const enVenta = srv.includes('venta'), enArr = srv.includes('arriendo');
+    const cuando = enVenta && enArr ? ' en venta y arriendo' : enArr ? ' en arriendo' : enVenta ? ' en venta' : '';
+
+    const lineas = [];
+    if (precio) lineas.push('Precio de venta: ' + pesos(precio));
+    if (canon)  lineas.push((precio ? 'Precio de arriendo: ' : 'Canon de arriendo: ') + pesos(canon) + '/mes');
+    if (inm.area && inm.area !== '0')                 lineas.push(inm.area + ' m²');
+    if (inm.habitaciones && inm.habitaciones !== '0') lineas.push(plural(inm.habitaciones, 'alcoba'));
+    if (inm.banos && inm.banos !== '0')               lineas.push(plural(inm.banos, 'baño'));
+    if (inm.parqueadero && !/^(0|no)/i.test(inm.parqueadero)) {
+      lineas.push(/^\d+$/.test(inm.parqueadero) ? plural(inm.parqueadero, 'parqueadero') : 'Parqueadero ' + inm.parqueadero.toLowerCase());
+    }
+    if (inm.estrato && inm.estrato !== '0') lineas.push('Estrato: ' + inm.estrato);
+
+    const titulo = (inm.tipo || 'Inmueble') + cuando + (inm.barrio ? ' · ' + inm.barrio : '');
+    return '*' + titulo + '*\n'
+      + lineas.map(l => '• ' + l).join('\n')
+      + '\n• Más información y fotos:\n'
+      + linkCanonico();
+  }
+
   function conectarEventos(inm, titulo) {
     const fotos = inm.fotos;
     const track = document.getElementById('hero-track');
@@ -289,16 +330,16 @@
       });
     }
 
-    // Compartir
-    const resumen = titulo + (inm.barrio ? ' — ' + inm.barrio : '');
+    // Compartir: el mensaje ya sale escrito (datos + link), listo para WhatsApp.
     const compartir = async () => {
-      const datos = { title: document.title, text: resumen, url: window.location.href };
+      const mensaje = mensajeCompartir(inm);
       if (navigator.share) {
-        try { await navigator.share(datos); return; }
+        // Solo "text": el link va dentro del mensaje, así queda al final y no duplicado.
+        try { await navigator.share({ text: mensaje }); return; }
         catch (e) { if (e && e.name === 'AbortError') return; }
       }
-      try { await navigator.clipboard.writeText(window.location.href); aviso('Link copiado'); }
-      catch (e) { aviso('Copia el link desde la barra del navegador'); }
+      try { await navigator.clipboard.writeText(mensaje); aviso('Mensaje copiado. Pégalo en WhatsApp'); }
+      catch (e) { aviso('No se pudo copiar. Copia el link desde la barra del navegador'); }
     };
     document.getElementById('btn-compartir').addEventListener('click', compartir);
     document.getElementById('btn-compartir-top').addEventListener('click', compartir);
