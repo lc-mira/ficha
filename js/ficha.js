@@ -29,6 +29,7 @@
     tipo:          h => h === 'tipo',
     proyecto:      h => h.startsWith('proyecto') || h.startsWith('nombre'),
     barrio:        h => h.startsWith('barrio') || h.startsWith('zona'),
+    ciudad:        h => h === 'ciudad',
     precio:        h => h.startsWith('precio'),
     canon:         h => h.startsWith('canon'),
     area:          h => h.startsWith('area'),
@@ -37,6 +38,8 @@
     parqueadero:   h => h.startsWith('parqueadero'),
     piso:          h => h.includes('piso') && !h.includes('precio'),
     estrato:       h => h === 'estrato',
+    administracion: h => h.startsWith('administracion') || h.startsWith('admon'),
+    ascensor:      h => h.startsWith('ascensor'),
     estado:        h => h === 'estado',
     servicio:      h => h === 'servicio',
     credito:       h => h.includes('credito'),
@@ -173,7 +176,7 @@
     }
 
     const titulo = inm.proyecto || ((inm.tipo || 'Inmueble') + (inm.barrio ? ' en ' + inm.barrio : ''));
-    const ubicacion = [inm.barrio, CFG.CIUDAD, CFG.PAIS].filter(Boolean).join(', ');
+    const ubicacion = [inm.barrio, inm.ciudad || CFG.CIUDAD, CFG.PAIS].filter(Boolean).join(', ');
     const fotos = inm.fotos;
     const noDisponible = inm.estado && !/disponible/i.test(inm.estado) ? inm.estado : '';
 
@@ -206,6 +209,9 @@
     if (inm.parqueadero && !/^(0|no)/i.test(inm.parqueadero)) {
       chips.push(/^\d+$/.test(inm.parqueadero) ? 'Parqueaderos: ' + inm.parqueadero : 'Parqueadero ' + inm.parqueadero.toLowerCase());
     }
+    if (tieneAscensor(inm)) chips.push('Ascensor');
+    const admon = aNumero(inm.administracion);
+    if (admon) chips.push('Administración ' + pesos(admon) + '/mes');
     const pago = formaPago(inm.credito);
     if (pago) chips.push(pago);
 
@@ -266,6 +272,11 @@
    * OJO: functions/_lib/inmueble.js arma el título de la vista previa con la
    * misma lógica; si cambias uno, cambia el otro.
    */
+  /** Ascensor: solo se muestra si la hoja dice Sí (vacío o No = no se menciona). */
+  function tieneAscensor(inm) {
+    return /^s[ií]/i.test(norm(inm.ascensor));
+  }
+
   function mensajeCompartir(inm) {
     const precio = aNumero(inm.precio);
     const canon  = aNumero(inm.canon);
@@ -283,8 +294,12 @@
       lineas.push(/^\d+$/.test(inm.parqueadero) ? plural(inm.parqueadero, 'parqueadero') : 'Parqueadero ' + inm.parqueadero.toLowerCase());
     }
     if (inm.estrato && inm.estrato !== '0') lineas.push('Estrato: ' + inm.estrato);
+    if (tieneAscensor(inm)) lineas.push('Ascensor');
+    const admon = aNumero(inm.administracion);
+    if (admon) lineas.push('Administración: ' + pesos(admon) + '/mes');
 
-    const titulo = (inm.tipo || 'Inmueble') + cuando + (inm.barrio ? ' · ' + inm.barrio : '');
+    const lugar = [inm.barrio, inm.ciudad].filter(Boolean).join(', ');
+    const titulo = (inm.tipo || 'Inmueble') + cuando + (lugar ? ' · ' + lugar : '');
     return '*' + titulo + '*\n'
       + lineas.map(l => '• ' + l).join('\n')
       + '\n• Más información y fotos:\n'

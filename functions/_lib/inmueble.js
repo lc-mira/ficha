@@ -16,12 +16,15 @@ const CAMPOS = {
   id:           h => h === 'id',
   tipo:         h => h === 'tipo',
   barrio:       h => h.startsWith('barrio') || h.startsWith('zona'),
+  ciudad:       h => h === 'ciudad',
   precio:       h => h.startsWith('precio'),
   canon:        h => h.startsWith('canon'),
   area:         h => h.startsWith('area'),
   habitaciones: h => h.startsWith('habitacion'),
   banos:        h => h.startsWith('bano'),
   estrato:      h => h === 'estrato',
+  administracion: h => h.startsWith('administracion') || h.startsWith('admon'),
+  ascensor:     h => h.startsWith('ascensor'),
   servicio:     h => h === 'servicio',
   fotos:        h => h.includes('foto'),
 };
@@ -115,7 +118,8 @@ export function tituloVistaPrevia(inm) {
   const srv = norm(inm.servicio);
   const enVenta = srv.includes('venta'), enArr = srv.includes('arriendo');
   const cuando = enVenta && enArr ? ' en venta y arriendo' : enArr ? ' en arriendo' : enVenta ? ' en venta' : '';
-  return (inm.tipo || 'Inmueble') + cuando + (inm.barrio ? ' · ' + inm.barrio : '');
+  const lugar = [inm.barrio, inm.ciudad].filter(Boolean).join(', ');
+  return (inm.tipo || 'Inmueble') + cuando + (lugar ? ' · ' + lugar : '');
 }
 
 export function descripcionVistaPrevia(inm) {
@@ -128,6 +132,9 @@ export function descripcionVistaPrevia(inm) {
   if (inm.habitaciones && inm.habitaciones !== '0') partes.push(inm.habitaciones + (Number(inm.habitaciones) === 1 ? ' alcoba' : ' alcobas'));
   if (inm.banos && inm.banos !== '0')               partes.push(inm.banos + (Number(inm.banos) === 1 ? ' baño' : ' baños'));
   if (inm.estrato && inm.estrato !== '0')           partes.push('Estrato ' + inm.estrato);
+  if (/^s[ií]/i.test(norm(inm.ascensor)))           partes.push('Ascensor');
+  const admon = aNumero(inm.administracion);
+  if (admon)                                        partes.push('Admón. ' + pesos(admon));
   return partes.join(' · ');
 }
 
