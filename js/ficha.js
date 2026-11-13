@@ -158,6 +158,26 @@
     share:   '<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/>',
     cerrar:  '<path d="M6 6l12 12M18 6L6 18"/>',
     imagen:  '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 3.5 3L15 13l5 4.5"/>',
+    piscina: '<path d="M8 4v10M15 4v10"/><path d="M8 7h7M8 10.5h7"/><path d="M3 17c1.5 0 1.5 1.2 3 1.2S7.5 17 9 17s1.5 1.2 3 1.2 1.5-1.2 3-1.2 1.5 1.2 3 1.2 1.5-1.2 3-1.2"/>',
+    gimnasio: '<path d="M6.5 8v8M17.5 8v8M3.5 10v4M20.5 10v4M6.5 12h11"/>',
+    bbq: '<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 20l1.5-4M16 20l-1.5-4"/><path d="M9 3c-1 1.3 1 2 0 3.5M13 3c-1 1.3 1 2 0 3.5"/>',
+    social: '<circle cx="8" cy="8" r="2.5"/><circle cx="16" cy="8" r="2.5"/><path d="M3.5 19c0-3 2-5 4.5-5s4.5 2 4.5 5"/><path d="M12 19c0-3 1.7-5 4-5s4.5 2 4.5 5"/>',
+    juegos: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5c3 3 3 14 0 17M3.5 12c3-3 14-3 17 0"/>',
+    vigilancia: '<path d="M12 3l7 3v5c0 4.6-3 8-7 10-4-2-7-5.4-7-10V6l7-3z"/><path d="M9 12l2.2 2.2L15.5 10"/>',
+    cerrado: '<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+    verde: '<circle cx="12" cy="9" r="5.5"/><path d="M12 14.5V21M9.5 21h5"/>',
+    balcon: '<path d="M7 11V5h10v6"/><path d="M4 11h16"/><path d="M5 11v8M9.5 11v8M14.5 11v8M19 11v8"/><path d="M4 19h16"/>',
+    terraza: '<path d="M3.5 12a8.5 8.5 0 0 1 17 0z"/><path d="M12 12v8"/><path d="M12 20h-2.5"/>',
+    cocina: '<path d="M5 10h14v7a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-7z"/><path d="M3 10h18M9 6c-.8-1 .8-1.5 0-2.5M13 6c-.8-1 .8-1.5 0-2.5"/>',
+    patio: '<path d="M12 21v-8"/><path d="M12 13c0-4 2.5-6 6-6 0 4-2 6-6 6z"/><path d="M12 15c0-3-2-5-5-5 0 3 1.8 5 5 5z"/>',
+    vista: '<path d="M3 19l6-10 4 6 2.5-4L21 19H3z"/><circle cx="17" cy="6" r="1.6"/>',
+    closet: '<rect x="5" y="3.5" width="14" height="17" rx="1.5"/><path d="M12 3.5v17M9.5 12v2M14.5 12v2"/>',
+    estudio: '<path d="M4 5.5c3-1 5.5-.8 8 1 2.5-1.8 5-2 8-1v13c-3-1-5.5-.8-8 1-2.5-1.8-5-2-8-1v-13z"/><path d="M12 6.5v13"/>',
+    gas: '<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5.3 1.5 1 2 1.8 2.3C11 8 11 5.5 12 3z"/>',
+    deposito: '<path d="M3.5 8l8.5-4.5L20.5 8v8.5L12 21l-8.5-4.5V8z"/><path d="M3.5 8L12 12.5 20.5 8M12 12.5V21"/>',
+    lavanderia: '<rect x="4.5" y="3.5" width="15" height="17" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M8 7h.01M11 7h.01"/>',
+    amoblado: '<path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M3.5 11a1.5 1.5 0 0 1 3 0v3h11v-3a1.5 1.5 0 0 1 3 0v6h-17v-6z"/><path d="M6 17v2M18 17v2"/>',
+    mascota: '<circle cx="7" cy="10" r="1.7"/><circle cx="11" cy="6.5" r="1.7"/><circle cx="15.5" cy="7" r="1.7"/><circle cx="18.5" cy="11" r="1.7"/><path d="M8 17c0-3 2-5 4-5s5 2 4.5 5c-.4 2-2 2-4.5 1-2.5 1-4.5 1-4-1z"/>',
     bajar:   '<path d="M12 4v11"/><path d="M7.5 11l4.5 4.5 4.5-4.5"/><path d="M4.5 19.5h15"/>',
   };
   /** SVG en línea (hereda el color con currentColor). */
@@ -171,6 +191,59 @@
       + '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + (IC_RUTAS[nombre] || '') + '</svg>';
   }
   const OJO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6" fill="currentColor" stroke="none"/></svg>';
+
+
+  /* =============================================================
+   * Comodidades detectadas en la descripción (palabras clave).
+   * El orden es la prioridad: si hay muchas, salen primero las primeras.
+   * Para agregar una: ícono en IC_RUTAS + una línea aquí.
+   * ============================================================= */
+  const COMODIDADES = [
+    ['piscina',    'Piscina',            /\b(piscina|pisc|zona humeda|turco|sauna)\b/],
+    ['gimnasio',   'Gimnasio',           /\b(gimnasio|gym|zona de ejercicio)\b/],
+    ['vigilancia', null,                 /\b(vigilancia|porteria|seguridad|celaduria|portero)\b/],
+    ['balcon',     'Balcón',             /\bbalcon(es)?\b/],
+    ['ascensor',   'Con ascensor',       /\b(ascensor(es)?|elevador)\b/],
+    ['bbq',        'Zona BBQ',           /\b(bbq|b\.b\.q|asadero|zona de asados|parrilla)\b/],
+    ['social',     'Salón social',       /\b(salon(es)? social(es)?|salon(es)? comunal(es)?|zona social)\b/],
+    ['juegos',     'Zona infantil',      /\b(juegos infantiles|zona infantil|parque infantil|zona de juegos|ludoteca)\b/],
+    ['terraza',    'Terraza',            /\bterraza(s)?\b/],
+    ['cocina',     'Cocina integral',    /\bcocina (semi)?integral\b|\bcocina abierta\b/],
+    ['vista',      'Buena vista',        /\b(vista|panoramic[oa])\b/],
+    ['cerrado',    'Conjunto cerrado',   /\b(conjunto|unidad|urbanizacion) cerrad[oa]\b/],
+    ['verde',      'Zonas verdes',       /\b(zonas? verdes?|jardines|parques?(?! infantil))\b/],
+    ['patio',      'Patio',              /\bpatio\b(?! de ropas)/],
+    ['closet',     'Closets',            /\b(closets?|vestier|armarios? empotrados?)\b/],
+    ['estudio',    'Estudio',            /\b(cuarto|sala|zona) de estudio\b|\bestudio\b(?! de)/],
+    ['gas',        'Gas natural',        /\bgas (natural|domiciliario)\b/],
+    ['deposito',   'Depósito',           /\b(deposito|cuarto util)\b/],
+    ['lavanderia', 'Zona de ropas',      /\b(lavanderia|zona de ropas|zona de lavado|patio de ropas)\b/],
+    ['amoblado',   'Amoblado',           /\b(amoblad[oa]|amueblad[oa])\b/],
+    ['mascota',    'Mascotas permitidas',/\b(mascotas|pet ?friendly)\b/],
+  ];
+  const NEGACION = /\b(sin|no tiene|no cuenta con|no hay|no incluye|carece de|no se permiten?|no permite|no acepta)\b/;
+
+  /** Detecta comodidades en la descripción, ignorando las negadas ("sin piscina"). */
+  function comodidadesDeTexto(texto) {
+    const t = norm(texto || '');
+    if (!t) return [];
+    const out = [];
+    COMODIDADES.forEach(([icono, etiqueta, re]) => {
+      const g = new RegExp(re.source, 'g');
+      let m, ok = false;
+      while ((m = g.exec(t))) {
+        // Solo se mira la frase corta anterior (hasta coma, punto, "con" o "pero").
+        let previo = t.slice(Math.max(0, m.index - 40), m.index);
+        previo = previo.split(/[.,;:\n]|\bcon\b|\bpero\b/).pop();
+        if (!NEGACION.test(previo)) { ok = true; break; }
+      }
+      if (!ok) return;
+      let texto2 = etiqueta;
+      if (icono === 'vigilancia') texto2 = /(vigilancia|porteria|seguridad|celaduria)[^.,;]{0,20}(24|veinticuatro)/.test(t) ? 'Vigilancia 24 h' : 'Vigilancia';
+      out.push({ icono, texto: texto2, com: true });
+    });
+    return out;
+  }
 
   /* =============================================================
    * 2. LECTURA DEL ESPEJO (Google Sheets API, hoja pública)
@@ -271,6 +344,10 @@
     const pago = formaPago(inm.credito);
     if (pago) detalles.push({ icono: 'credito', texto: pago });
     if (esSi(inm.ascensor)) detalles.push({ icono: 'ascensor', texto: 'Con ascensor' });
+    // Comodidades que aparecen en la descripción (sin repetir lo que ya hay; máximo 8 en total)
+    comodidadesDeTexto(inm.observaciones).forEach(c => {
+      if (detalles.length < 8 && !detalles.some(d => d.icono === c.icono)) detalles.push(c);
+    });
 
     return {
       titulo: (inm.tipo || 'Inmueble') + cuando,

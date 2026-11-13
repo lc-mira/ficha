@@ -175,17 +175,22 @@ window.FichaImagen = (function () {
     const tarjetas = v.tarjetas.slice(0, 3);
     const statsH = tarjetas.length ? 176 : 0;
 
-    // Píldoras con lo demás: se llenan de izquierda a derecha, sin saltar de línea.
-    const textosPildora = v.tarjetas.slice(3).map(t => t.pildora).concat(v.detalles.map(d => d.texto)).filter(Boolean);
+    // Píldoras con lo demás (datos + forma de pago) y, después, hasta 4 comodidades.
+    // Se acomodan de izquierda a derecha con salto de línea, máximo 2 filas.
+    const textosPildora = v.tarjetas.slice(3).map(t => t.pildora)
+      .concat(v.detalles.filter(d => !d.com).map(d => d.texto))
+      .concat(v.detalles.filter(d => d.com).slice(0, 4).map(d => d.texto)).filter(Boolean);
     const pildoras = [];
-    let usado = 0;
+    let usado = 0, fila = 0;
     textosPildora.forEach(t => {
       const w = medir(ctx, t, 28, 500, 0) + 60;
-      const sig = usado + (pildoras.length ? 14 : 0) + w;
-      if (sig <= cardW) { pildoras.push({ t, w }); usado = sig; }
+      if (usado && usado + 14 + w > cardW) { fila++; usado = 0; }
+      if (fila > 2) return;
+      pildoras.push({ t, w, fila, x: usado ? usado + 14 : 0 });
+      usado = (usado ? usado + 14 : 0) + w;
     });
-    // Las que no cupieron en la fila se pierden: la fila es de 3 datos secundarios como máximo.
-    const pildorasH = pildoras.length ? 64 : 0;
+    const filas = pildoras.length ? pildoras[pildoras.length - 1].fila + 1 : 0;
+    const pildorasH = filas ? filas * 64 + (filas - 1) * 12 : 0;
 
     const pieH = 120;
     const apilado = (tituloH - SOLAPE) + G + precioH + (statsH ? G + statsH : 0) + (pildorasH ? G + pildorasH : 0) + G;
@@ -308,11 +313,10 @@ window.FichaImagen = (function () {
     /* ---------- Píldoras ---------- */
     if (pildorasH) {
       y += G;
-      let x = M;
       pildoras.forEach(p => {
-        ctx.fillStyle = c.suave; ruta(ctx, x, y, p.w, pildorasH, pildorasH / 2); ctx.fill();
-        texto(ctx, p.t, x + p.w / 2, y + 42, { size: 28, peso: 500, color: c.acento, align: 'center' });
-        x += p.w + 14;
+        const py = y + p.fila * 76, px = M + p.x;
+        ctx.fillStyle = c.suave; ruta(ctx, px, py, p.w, 64, 32); ctx.fill();
+        texto(ctx, p.t, px + p.w / 2, py + 42, { size: 28, peso: 500, color: c.acento, align: 'center' });
       });
       y += pildorasH;
     }

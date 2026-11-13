@@ -12,11 +12,22 @@ El repo no contiene nada de ningún cliente: el cliente llega en la URL.
 | Archivo | Qué hace |
 |---|---|
 | `index.html`, `css/ficha.css`, `js/ficha.js` | La ficha. Lee la hoja **Espejo** pública con la Google Sheets API. |
+| `js/imagen.js` | Genera la imagen PNG vertical (1080×1920) para estados y redes; el pie de marca es pequeño y sin enlace. |
 | `js/config.js` | API key (restringida por referrer a `ficha.miraleads.pro`), marca y colores. |
 | `functions/index.js` | Cloudflare Pages Function. Reemplaza las etiquetas `og:` del HTML con las del inmueble para que WhatsApp muestre la vista previa. |
-| `functions/foto.js` | Sirve la foto principal liviana (~800 px) desde nuestro dominio para la vista previa. |
+| `functions/foto.js` | Sirve la foto desde nuestro dominio: por defecto la principal a ~800 px (vista previa); con `?n=` otra foto y con `?w=` 800/1200/1600 px (imagen PNG). |
 | `functions/_lib/inmueble.js` | Lectura del Espejo en el servidor, textos de la vista previa y lista de hosts de foto permitidos. |
 | `_routes.json` | Solo `/` y `/foto` ejecutan funciones; el resto son archivos estáticos. |
+
+## Comodidades por palabras clave
+
+`COMODIDADES` en `js/ficha.js` detecta en la descripción piscina, gimnasio, vigilancia, balcón, etc. y las muestra como
+íconos (ignora negaciones como «sin piscina»). Para agregar una: ícono en `IC_RUTAS` y una línea en `COMODIDADES`.
+Máximo 8 en la página y 4 en la imagen.
+
+## Columnas opcionales del Espejo
+
+`Ciudad`, `Administración` y `Ascensor`: si existen se usan; si no, la ficha funciona igual.
 
 ## Privacidad (lista blanca)
 
