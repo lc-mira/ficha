@@ -311,7 +311,7 @@ a { color: inherit; }
   box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
 }
 .modal-img-nota { max-width: 360px; text-align: center; font-size: 12.5px; line-height: 1.5; color: rgba(255, 255, 255, .75); }
-.modal-img-acciones { display: flex; gap: 10px; width: 100%; max-width: 380px; }
+.modal-img-acciones { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 380px; }
 .modal-img-acciones button {
   flex: 1; height: 50px; border-radius: 15px; border: 0; font-size: 14.5px; font-weight: 600;
   display: flex; align-items: center; justify-content: center; gap: 8px;

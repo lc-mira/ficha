@@ -521,9 +521,10 @@
     modal.innerHTML =
       '<button type="button" class="btn-circulo modal-img-cerrar" aria-label="Cerrar">' + ico('cerrar') + '</button>'
       + '<img src="' + urlObj + '" alt="Vista previa de la imagen">'
-      + '<p class="modal-img-nota">Formato vertical 1080×1920, listo para estados de WhatsApp, Instagram y Facebook.</p>'
+      + '<p class="modal-img-nota">Al compartir, la imagen va con el texto y el enlace de la ficha. Si la guardas, usa «Copiar enlace» para pegarlo junto a la imagen.</p>'
       + '<div class="modal-img-acciones">'
       +   (puedeCompartir ? '<button type="button" class="primario" id="img-compartir">' + ico('share') + 'Compartir</button>' : '')
+      +   '<button type="button" id="img-enlace">' + ico('share') + 'Copiar enlace</button>'
       +   '<button type="button" id="img-guardar">' + ico('bajar') + 'Guardar imagen</button>'
       + '</div>';
     document.body.appendChild(modal);
@@ -544,6 +545,11 @@
       a.href = urlObj; a.download = nombre;
       document.body.appendChild(a); a.click(); a.remove();
       aviso('Imagen guardada');
+    });
+    modal.querySelector('#img-enlace').addEventListener('click', async () => {
+      const txt = mensajeCompartir(inm);
+      try { await navigator.clipboard.writeText(txt); aviso('Texto con enlace copiado'); }
+      catch (e) { aviso('No se pudo copiar'); }
     });
     const btnCompartir = modal.querySelector('#img-compartir');
     if (btnCompartir) btnCompartir.addEventListener('click', async () => {

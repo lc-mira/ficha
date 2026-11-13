@@ -189,9 +189,9 @@ window.FichaImagen = (function () {
 
     const pieH = 120;
     const apilado = (tituloH - SOLAPE) + G + precioH + (statsH ? G + statsH : 0) + (pildorasH ? G + pildorasH : 0) + G;
-    const FOOTER_Y = 1600;
+    const FOOTER_Y = 1780;
     let fotoH = FOOTER_Y - apilado;
-    fotoH = Math.max(620, Math.min(1020, fotoH));
+    fotoH = Math.max(620, Math.min(1160, fotoH));
     const pieY = fotoH + apilado;
 
     /* ---------- Fondo ---------- */
@@ -323,15 +323,14 @@ window.FichaImagen = (function () {
     ctx.fillStyle = banda; ctx.fillRect(0, pieY, W, H - pieY);
     ctx.fillStyle = '#dde2e8'; ctx.fillRect(0, pieY, W, 2);
 
-    texto(ctx, 'FICHA CREADA CON', M + 4, pieY + 40, { size: 20, peso: 600, color: '#5f6877', tracking: 4 });
-    dibujarOjo(ctx, c, M + 28, pieY + 82, 24);
-    texto(ctx, 'mira', M + 70, pieY + 98, { size: 54, peso: 700, color: '#38404c', tracking: -1 });
-    const wMira = medir(ctx, 'mira', 54, 700, -1);
-    texto(ctx, 'leads', M + 70 + wMira + 6, pieY + 98, { size: 54, peso: 300, color: '#38404c', tracking: -1 });
-
-    const dom = o.dominio || 'miraleads.pro';
-    texto(ctx, 'Conoce más en', W - M, pieY + 44, { size: 22, color: '#5f6877', align: 'right' });
-    texto(ctx, dom, W - M, pieY + 96, { size: 38, peso: 600, color: c.acento, align: 'right' });
+    // Pie discreto: solo una línea pequeña y centrada, sin enlace.
+    const t1 = 'Ficha creada con ', t2 = 'Mira Leads';
+    const w1 = medir(ctx, t1, 22, 400, 0), w2 = medir(ctx, t2, 22, 600, 0);
+    let x = (W - (30 + w1 + w2)) / 2;
+    dibujarOjo(ctx, c, x + 10, pieY + 40, 10);
+    x += 30;
+    texto(ctx, t1, x, pieY + 48, { size: 22, peso: 400, color: '#7a8493' });
+    texto(ctx, t2, x + w1, pieY + 48, { size: 22, peso: 600, color: '#7a8493' });
 
     return new Promise((ok, mal) => {
       canvas.toBlob(b => b ? ok(b) : mal(new Error('No se pudo crear la imagen')), 'image/png');
