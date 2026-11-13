@@ -23,6 +23,8 @@ const CAMPOS = {
   habitaciones: h => h.startsWith('habitacion'),
   banos:        h => h.startsWith('bano'),
   estrato:      h => h === 'estrato',
+  administracion: h => h.startsWith('administracion') || h.startsWith('admon'),
+  ascensor:     h => h.startsWith('ascensor'),
   servicio:     h => h === 'servicio',
   fotos:        h => h.includes('foto'),
 };
@@ -143,6 +145,9 @@ export function descripcionVistaPrevia(inm) {
   if (inm.habitaciones && inm.habitaciones !== '0') partes.push(inm.habitaciones + (Number(inm.habitaciones) === 1 ? ' alcoba' : ' alcobas'));
   if (inm.banos && inm.banos !== '0')               partes.push(inm.banos + (Number(inm.banos) === 1 ? ' baño' : ' baños'));
   if (inm.estrato && inm.estrato !== '0')           partes.push('Estrato ' + inm.estrato);
+  if (/^s[ií]/i.test(norm(inm.ascensor)))           partes.push('Ascensor');
+  const admon = aNumero(inm.administracion);
+  if (admon)                                        partes.push('Admón. ' + pesos(admon));
   return partes.join(' · ');
 }
 
