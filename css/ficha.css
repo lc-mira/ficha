@@ -96,33 +96,33 @@ a { color: inherit; }
 .cab {
   position: relative; background: var(--papel);
   border-radius: 0 0 32px 32px; box-shadow: var(--sombra);
-  padding: calc(30px + env(safe-area-inset-top)) 64px 24px;
+  padding: calc(18px + env(safe-area-inset-top)) 60px 16px;
   text-align: center;
 }
-.cab-share { position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px; }
+.cab-share { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: 12px; }
 
 .titulo {
-  font-size: 19px; font-weight: 600; line-height: 1.35;
+  font-size: 17px; font-weight: 600; line-height: 1.3;
   letter-spacing: .07em; text-transform: uppercase; color: #38404c;
 }
 .cab-linea {
-  width: 132px; height: 2px; margin: 14px auto 0; border-radius: 2px;
+  width: 120px; height: 2px; margin: 9px auto 0; border-radius: 2px;
   background: linear-gradient(90deg, transparent, var(--acento-claro) 22%, var(--acento) 50%, var(--acento-claro) 78%, transparent);
 }
-.proyecto { margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--tinta); }
+.proyecto { margin-top: 8px; font-size: 14px; font-weight: 600; color: var(--tinta); }
 .ubicacion {
-  margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin-top: 3px; display: flex; align-items: center; justify-content: center; gap: 6px;
   font-size: 13px; color: var(--suave); line-height: 1.4;
 }
-.proyecto + .ubicacion { margin-top: 3px; }
+.proyecto + .ubicacion { margin-top: 1px; }
 .ubicacion svg { width: 16px; height: 16px; flex: none; color: var(--tenue); }
 
 /* ---------- Galería ---------- */
-.galeria { position: relative; margin: 18px 16px 0; }
-.galeria.con-thumbs { padding-bottom: 36px; }
+.galeria { position: relative; margin: 14px 16px 0; }
+.galeria.con-thumbs { padding-bottom: 30px; }
 
 .hero {
-  position: relative; aspect-ratio: 4 / 3; border-radius: 28px; overflow: hidden;
+  position: relative; aspect-ratio: 16 / 10; border-radius: 28px; overflow: hidden;
   background: #d9dee4; box-shadow: var(--sombra);
 }
 .hero-track {
@@ -150,8 +150,8 @@ a { color: inherit; }
 /* Miniaturas sobrepuestas */
 .thumbs {
   position: absolute; z-index: 2; left: 14px; right: 14px; bottom: 0;
-  display: flex; gap: 8px; padding: 8px;
-  background: #fff; border-radius: 22px; box-shadow: var(--sombra-fuerte);
+  display: flex; gap: 7px; padding: 6px;
+  background: #fff; border-radius: 20px; box-shadow: var(--sombra-fuerte);
 }
 .thumb {
   position: relative; flex: 1 1 0; min-width: 0; aspect-ratio: 1;
@@ -167,7 +167,7 @@ a { color: inherit; }
 
 /* ---------- Precio ---------- */
 .precio-card {
-  margin: 18px 16px 0; padding: 20px 22px; border-radius: 26px; color: #fff;
+  margin: 12px 16px 0; padding: 13px 22px; border-radius: 26px; color: #fff;
   display: flex; gap: 18px;
   background: linear-gradient(135deg, var(--acento-oscuro), var(--acento) 55%, var(--acento-claro));
   box-shadow: 0 14px 30px rgba(11, 68, 59, .25);
@@ -178,7 +178,7 @@ a { color: inherit; }
   font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; opacity: .82;
 }
 .precio-val {
-  margin-top: 4px; font-size: 32px; font-weight: 700; line-height: 1.15; letter-spacing: -.015em;
+  margin-top: 2px; font-size: 30px; font-weight: 700; line-height: 1.15; letter-spacing: -.015em;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .precio-val small { margin-left: 3px; font-size: 13px; font-weight: 500; letter-spacing: 0; opacity: .82; }
@@ -188,7 +188,7 @@ a { color: inherit; }
 .precio-card.dos .precio-val small { font-size: 11px; margin-left: 2px; }
 
 /* ---------- Tarjetas de datos (deslizables) ---------- */
-.tarjetas { margin-top: 16px; }
+.tarjetas { margin-top: 8px; }
 .tarjetas-track {
   display: flex; gap: 12px; overflow-x: auto; padding: 6px 16px 20px;
   scroll-snap-type: x proximity; scroll-padding-left: 16px;
@@ -198,7 +198,7 @@ a { color: inherit; }
 .tarjeta {
   flex: 0 0 140px; scroll-snap-align: start;
   background: var(--papel); border-radius: 24px; box-shadow: var(--sombra);
-  padding: 14px 14px 16px; display: flex; flex-direction: column;
+  padding: 10px 14px 12px; display: flex; flex-direction: column;
 }
 .ico {
   width: 38px; height: 38px; border-radius: 50%; flex: none;
@@ -206,10 +206,11 @@ a { color: inherit; }
   display: grid; place-items: center;
 }
 .ico svg { width: 20px; height: 20px; }
-.tarjeta .ico { margin-bottom: 12px; }
+.tarjeta .ico { width: 32px; height: 32px; margin-bottom: 5px; }
+.tarjeta .ico svg { width: 17px; height: 17px; }
 .tarjeta-etq { font-size: 12px; color: var(--suave); line-height: 1.3; }
 .tarjeta-val {
-  margin-top: 2px; font-size: 26px; font-weight: 700; line-height: 1.15; letter-spacing: -.015em;
+  margin-top: 1px; font-size: 24px; font-weight: 700; line-height: 1.15; letter-spacing: -.015em;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .tarjeta-val.largo { font-size: 18px; }
