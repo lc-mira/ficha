@@ -16,6 +16,7 @@ const CAMPOS = {
   id:           h => h === 'id',
   tipo:         h => h === 'tipo',
   barrio:       h => h.startsWith('barrio') || h.startsWith('zona'),
+  ciudad:       h => h === 'ciudad',
   precio:       h => h.startsWith('precio'),
   canon:        h => h.startsWith('canon'),
   area:         h => h.startsWith('area'),
@@ -105,17 +106,31 @@ export async function buscarInmueble(env, origin, sheet, codigo) {
 
   const inm = {};
   Object.keys(idx).forEach(clave => { inm[clave] = String(fila[idx[clave]] || '').trim(); });
-  inm.fotos = (inm.fotos || '').split(/[\n,]+/).map(u => u.trim()).filter(Boolean);
+  // Mismo criterio que js/ficha.js (solo https): así el índice ?n= de /foto coincide con el del navegador.
+  inm.fotos = (inm.fotos || '').split(/[\n,]+/).map(u => u.trim()).filter(u => /^https:\/\//i.test(u));
   return { inm };
 }
 
 /* ---------- texto de la vista previa ---------- */
+/**
+ * "Barrio, Ciudad" sin repetir la ciudad si el barrio ya la trae (ej. "Ciudad Córdoba, Cali")
+ * y sin inventar una ciudad por defecto (hay inmuebles en Cali, Palmira, Jamundí…).
+ * OJO: js/ficha.js (ubicacionTexto) usa la misma lógica.
+ */
+export function ubicacionTexto(inm) {
+  const partes = [];
+  if (inm.barrio) partes.push(inm.barrio);
+  if (inm.ciudad && !norm(inm.barrio).includes(norm(inm.ciudad))) partes.push(inm.ciudad);
+  return partes.join(', ');
+}
+
 /** OJO: js/ficha.js (mensajeCompartir) arma el título con la misma lógica. */
 export function tituloVistaPrevia(inm) {
   const srv = norm(inm.servicio);
   const enVenta = srv.includes('venta'), enArr = srv.includes('arriendo');
   const cuando = enVenta && enArr ? ' en venta y arriendo' : enArr ? ' en arriendo' : enVenta ? ' en venta' : '';
-  return (inm.tipo || 'Inmueble') + cuando + (inm.barrio ? ' · ' + inm.barrio : '');
+  const donde = ubicacionTexto(inm);
+  return (inm.tipo || 'Inmueble') + cuando + (donde ? ' · ' + donde : '');
 }
 
 export function descripcionVistaPrevia(inm) {
@@ -132,12 +147,18 @@ export function descripcionVistaPrevia(inm) {
 }
 
 /* ---------- foto principal ---------- */
+/** Anchos permitidos para /foto?w= (800 = vista previa de WhatsApp; 1600 = imagen para estados). */
+export const ANCHOS_FOTO = [800, 1200, 1600];
+
 /**
- * Direcciones desde donde pedir una versión liviana (~800 px) de la foto.
- * WhatsApp descarta imágenes pesadas, y la foto original puede ser de 1600 px.
+ * Direcciones desde donde pedir una versión liviana de la foto.
+ * WhatsApp descarta imágenes pesadas, y la foto original puede ser muy grande.
  * Devuelve [] si el host no está permitido.
+ * @param {string} urlFoto
+ * @param {number} [ancho=800] uno de ANCHOS_FOTO
  */
-export function candidatosFoto(urlFoto) {
+export function candidatosFoto(urlFoto, ancho) {
+  const w = ANCHOS_FOTO.includes(ancho) ? ancho : 800;
   let u;
   try { u = new URL(urlFoto); } catch (e) { return []; }
   if (u.protocol !== 'https:' || !HOSTS_FOTO.includes(u.hostname)) return [];
@@ -145,12 +166,12 @@ export function candidatosFoto(urlFoto) {
   const enRuta = u.pathname.match(/\/d\/([\w-]{10,})/);
   const id = enRuta ? enRuta[1] : u.searchParams.get('id');
   if (u.hostname === 'lh3.googleusercontent.com' && !/^\/d\//.test(u.pathname)) {
-    return [urlFoto.replace(/=[swh]\d+[^/]*$/, '') + '=w800'];
+    return [urlFoto.replace(/=[swh]\d+[^/]*$/, '') + '=w' + w];
   }
   if (id && /^[\w-]{10,}$/.test(id)) {
     return [
-      'https://drive.google.com/thumbnail?id=' + id + '&sz=w800',
-      'https://lh3.googleusercontent.com/d/' + id + '=w800',
+      'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + w,
+      'https://lh3.googleusercontent.com/d/' + id + '=w' + w,
       'https://drive.google.com/uc?export=view&id=' + id,
     ];
   }

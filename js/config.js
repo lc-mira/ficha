@@ -22,6 +22,7 @@ window.FICHA_CONFIG = {
   CIUDAD: 'Cali',
   PAIS:   'Colombia',
 
+  // UN solo color de acento para toda la plantilla. El resto de tonos
+  // (oscuro, claro, suave) se derivan solos en js/ficha.js.
   COLOR_PRIMARIO: '#0f5b4f',
-  COLOR_ACENTO:   '#e7f2ef',
 };

@@ -10,9 +10,9 @@
  * y solo la pide si es de Google Drive (HOSTS_FOTO), así no sirve de proxy abierto.
  */
 
-import { buscarInmueble, parametrosValidos, candidatosFoto } from './_lib/inmueble.js';
+import { buscarInmueble, parametrosValidos, candidatosFoto, ANCHOS_FOTO } from './_lib/inmueble.js';
 
-const MAX_BYTES = 1500000; // WhatsApp ignora imágenes muy pesadas
+const MAX_BYTES = 2500000; // WhatsApp ignora imágenes muy pesadas; la de 800 px pesa mucho menos
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -22,10 +22,15 @@ export async function onRequestGet(context) {
   const codigo = (url.searchParams.get('codigo') || url.searchParams.get('id') || '').trim();
   if (!parametrosValidos(sheet, codigo)) return new Response('Enlace inválido', { status: 400 });
 
-  const { inm } = await buscarInmueble(env, url.origin, sheet, codigo);
-  if (!inm || !inm.fotos.length) return new Response('Sin foto', { status: 404 });
+  // ?n= qué foto (0 = la principal), ?w= ancho en px. Valores raros → los de la vista previa.
+  const n = /^\d{1,2}$/.test(url.searchParams.get('n') || '') ? Number(url.searchParams.get('n')) : 0;
+  const pedido = Number(url.searchParams.get('w'));
+  const ancho = ANCHOS_FOTO.includes(pedido) ? pedido : 800;
 
-  for (const candidata of candidatosFoto(inm.fotos[0])) {
+  const { inm } = await buscarInmueble(env, url.origin, sheet, codigo);
+  if (!inm || !inm.fotos[n]) return new Response('Sin foto', { status: 404 });
+
+  for (const candidata of candidatosFoto(inm.fotos[n], ancho)) {
     try {
       const r = await fetch(candidata, { redirect: 'follow', cf: { cacheTtl: 86400, cacheEverything: true } });
       const tipo = r.headers.get('content-type') || '';

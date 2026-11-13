@@ -11,6 +11,14 @@
  *   fecha de venta, ni nada de encargado / celular / notas / documentos / comisión.
  *   Si un día se agrega una columna nueva al Espejo, no aparece aquí hasta
  *   que alguien la agregue a propósito a esta lista.
+ *
+ * ESTRUCTURA
+ *   1. Lista blanca y utilidades
+ *   2. Lectura del Espejo
+ *   3. construirVista(): datos ya listos para mostrar (los usan la página
+ *      Y la imagen de js/imagen.js, así nunca se contradicen)
+ *   4. Render de la página
+ *   5. Interacción (galería, compartir, imagen)
  */
 
 'use strict';
@@ -25,28 +33,29 @@
    * en minúscula). El primer encabezado que coincide gana.
    * ============================================================= */
   const CAMPOS_PERMITIDOS = {
-    id:            h => h === 'id',
-    tipo:          h => h === 'tipo',
-    proyecto:      h => h.startsWith('proyecto') || h.startsWith('nombre'),
-    barrio:        h => h.startsWith('barrio') || h.startsWith('zona'),
-    precio:        h => h.startsWith('precio'),
-    canon:         h => h.startsWith('canon'),
-    area:          h => h.startsWith('area'),
-    habitaciones:  h => h.startsWith('habitacion'),
-    banos:         h => h.startsWith('bano'),
-    parqueadero:   h => h.startsWith('parqueadero'),
-    piso:          h => h.includes('piso') && !h.includes('precio'),
-    estrato:       h => h === 'estrato',
-    estado:        h => h === 'estado',
-    servicio:      h => h === 'servicio',
-    credito:       h => h.includes('credito'),
-    observaciones: h => h.startsWith('observacion'),
-    fotos:         h => h.includes('foto'),
+    id:             h => h === 'id',
+    tipo:           h => h === 'tipo',
+    proyecto:       h => h.startsWith('proyecto') || h.startsWith('nombre'),
+    barrio:         h => h.startsWith('barrio') || h.startsWith('zona'),
+    ciudad:         h => h === 'ciudad',
+    precio:         h => h.startsWith('precio'),
+    canon:          h => h.startsWith('canon'),
+    area:           h => h.startsWith('area'),
+    habitaciones:   h => h.startsWith('habitacion'),
+    banos:          h => h.startsWith('bano'),
+    parqueadero:    h => h.startsWith('parqueadero'),
+    piso:           h => h.includes('piso') && !h.includes('precio'),
+    estrato:        h => h === 'estrato',
+    estado:         h => h === 'estado',
+    servicio:       h => h === 'servicio',
+    credito:        h => h.includes('credito'),
+    administracion: h => h.startsWith('administracion'),
+    ascensor:       h => h === 'ascensor',
+    observaciones:  h => h.startsWith('observacion'),
+    fotos:          h => h.includes('foto'),
   };
 
-  /* =============================================================
-   * 2. UTILIDADES
-   * ============================================================= */
+  /* ---------- utilidades ---------- */
   const $app = document.getElementById('app');
 
   function esc(s) {
@@ -73,10 +82,15 @@
     try { return new URL(u).protocol === 'https:' ? u : ''; } catch (e) { return ''; }
   }
 
+  /** Hay dato útil: no vacío y no "0". */
+  function hayNum(v) { return !!v && !/^0+([.,]0+)?$/.test(String(v).trim()); }
+
   function esCasa(tipo) {
     const t = norm(tipo);
     return t === 'casa independiente' || t === 'casa en conjunto';
   }
+
+  function esSi(v) { return ['si', 'true', '1', 'con ascensor'].includes(norm(v)); }
 
   function formaPago(credito) {
     const c = norm(credito);
@@ -87,18 +101,79 @@
     return 'Forma de pago por revisar';
   }
 
-  /* Iconos (trazo, 24x24) */
-  const IC = {
-    cama:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18V6"/><path d="M3 14h18v4"/><path d="M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="1.6"/></svg>',
-    bano:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16v2a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-2z"/><path d="M6 12V6a2 2 0 0 1 3.5-1.3"/><path d="M7 19l-1 2M17 19l1 2"/></svg>',
-    area:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 20L20 4"/></svg>',
-    pin:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
-    share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>',
-    cerrar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  /** Singular/plural simple: plural(2,'baño') → "2 baños". */
+  function plural(n, palabra) { return n + ' ' + palabra + (Number(n) === 1 ? '' : 's'); }
+
+  /**
+   * "Barrio, Ciudad" sin repetir la ciudad si el barrio ya la trae (ej. "Ciudad Córdoba, Cali")
+   * y sin inventar una ciudad por defecto (hay inmuebles en Cali, Palmira, Jamundí…).
+   * OJO: functions/_lib/inmueble.js (ubicacionTexto) usa la misma lógica.
+   */
+  function ubicacionTexto(inm) {
+    const partes = [];
+    if (inm.barrio) partes.push(inm.barrio);
+    if (inm.ciudad && !norm(inm.barrio).includes(norm(inm.ciudad))) partes.push(inm.ciudad);
+    return partes.join(', ');
+  }
+
+  /* ---------- colores: un solo acento, el resto se deriva ---------- */
+  function hexARgb(hex) {
+    let h = String(hex || '').trim().replace('#', '');
+    if (h.length === 3) h = h.split('').map(x => x + x).join('');
+    if (!/^[0-9a-f]{6}$/i.test(h)) return null;
+    return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+  }
+  /** Mezcla "hex" con "con" (otro hex); pct = cuánto de "con" (0–1). */
+  function mezclar(hex, con, pct) {
+    const a = hexARgb(hex), b = hexARgb(con);
+    return '#' + a.map((x, i) => Math.round(x * (1 - pct) + b[i] * pct).toString(16).padStart(2, '0')).join('');
+  }
+  const COLORES = { acento: '#0f5b4f', oscuro: '#0b443b', claro: '#578c84', suave: '#e7efed' };
+
+  function aplicarColores() {
+    if (!hexARgb(CFG.COLOR_PRIMARIO)) return;
+    COLORES.acento = CFG.COLOR_PRIMARIO;
+    COLORES.oscuro = mezclar(COLORES.acento, '#000000', .25);
+    COLORES.claro  = mezclar(COLORES.acento, '#ffffff', .30);
+    COLORES.suave  = mezclar(COLORES.acento, '#ffffff', .90);
+    const r = document.documentElement.style;
+    r.setProperty('--acento', COLORES.acento);
+    r.setProperty('--acento-oscuro', COLORES.oscuro);
+    r.setProperty('--acento-claro', COLORES.claro);
+    r.setProperty('--acento-suave', COLORES.suave);
+  }
+
+  /* ---------- íconos (trazo, 24×24) ---------- */
+  const IC_RUTAS = {
+    area:    '<path d="M4 9V4h5"/><path d="M20 15v5h-5"/><path d="M4 4l6 6"/><path d="M20 20l-6-6"/>',
+    cama:    '<path d="M3 18V6"/><path d="M3 14h18v4"/><path d="M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="1.6"/>',
+    bano:    '<path d="M4 12h16v2a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-2z"/><path d="M6 12V6a2 2 0 0 1 3.5-1.3"/><path d="M7 19l-1 2M17 19l1 2"/>',
+    carro:   '<path d="M5 16v-5l1.6-4a2 2 0 0 1 1.9-1.3h7a2 2 0 0 1 1.9 1.3L19 11v5"/><rect x="3.5" y="11" width="17" height="5.5" rx="1.5"/><path d="M6 16.5V19M18 16.5V19"/><circle cx="7.5" cy="13.7" r=".7"/><circle cx="16.5" cy="13.7" r=".7"/>',
+    estrato: '<path d="M12 4l8 4-8 4-8-4 8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 16l8 4 8-4"/>',
+    piso:    '<rect x="5" y="3.5" width="14" height="17" rx="1.5"/><path d="M9 8h2M13 8h2M9 12h2M13 12h2M10.5 20.5v-3.5h3v3.5"/>',
+    admin:   '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v10"/><path d="M14.7 9.4c-.5-.8-1.5-1.2-2.7-1.2-1.6 0-2.6.8-2.6 1.9 0 2.7 5.3 1.3 5.3 4 0 1.2-1.1 2-2.8 2-1.3 0-2.3-.5-2.9-1.3"/>',
+    ascensor:'<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M12 3.5v17"/><path d="M8.5 10l1.5-2 1.5 2"/><path d="M12.5 14l1.5 2 1.5-2"/>',
+    credito: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h4"/>',
+    pin:     '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+    share:   '<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/>',
+    cerrar:  '<path d="M6 6l12 12M18 6L6 18"/>',
+    imagen:  '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 3.5 3L15 13l5 4.5"/>',
+    bajar:   '<path d="M12 4v11"/><path d="M7.5 11l4.5 4.5 4.5-4.5"/><path d="M4.5 19.5h15"/>',
   };
+  /** SVG en línea (hereda el color con currentColor). */
+  function ico(nombre) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+      + (IC_RUTAS[nombre] || '') + '</svg>';
+  }
+  /** SVG suelto con color fijo, para dibujarlo en el canvas de js/imagen.js. */
+  function iconoSvg(nombre, color) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="' + color
+      + '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + (IC_RUTAS[nombre] || '') + '</svg>';
+  }
+  const OJO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6" fill="currentColor" stroke="none"/></svg>';
 
   /* =============================================================
-   * 3. LECTURA DEL ESPEJO (Google Sheets API, hoja pública)
+   * 2. LECTURA DEL ESPEJO (Google Sheets API, hoja pública)
    * ============================================================= */
   class FichaError extends Error {
     constructor(titulo, detalle) { super(titulo); this.titulo = titulo; this.detalle = detalle; }
@@ -156,30 +231,67 @@
   }
 
   /* =============================================================
+   * 3. VISTA: los datos ya listos para mostrar
+   * ============================================================= */
+  function construirVista(inm) {
+    const precio = aNumero(inm.precio);
+    const canon  = aNumero(inm.canon);
+    const srv = norm(inm.servicio);
+    const enVenta = srv.includes('venta'), enArr = srv.includes('arriendo');
+    const cuando = enVenta && enArr ? ' en venta y arriendo' : enArr ? ' en arriendo' : enVenta ? ' en venta' : '';
+
+    // Precios: venta, arriendo o ambos
+    const precios = [];
+    if (precio) precios.push({ etiqueta: canon ? 'Venta' : 'Precio de venta', valor: pesos(precio), sufijo: '' });
+    if (canon)  precios.push({ etiqueta: precio ? 'Arriendo' : 'Canon de arriendo', valor: pesos(canon), sufijo: '/mes' });
+    if (!precios.length) precios.push({ etiqueta: 'Precio', valor: 'Consultar', sufijo: '' });
+
+    // Tarjetas de datos (la página las desliza; la imagen usa las 3 primeras)
+    const tarjetas = [];
+    if (hayNum(inm.area))         tarjetas.push({ icono: 'area',  etiqueta: 'Área',     valor: inm.area, unidad: 'm²' });
+    if (hayNum(inm.habitaciones)) tarjetas.push({ icono: 'cama',  etiqueta: 'Alcobas',  valor: inm.habitaciones });
+    if (hayNum(inm.banos))        tarjetas.push({ icono: 'bano',  etiqueta: 'Baños',    valor: inm.banos });
+    if (inm.parqueadero && !/^(0|no)/i.test(inm.parqueadero)) {
+      const num = /^\d+$/.test(inm.parqueadero);
+      tarjetas.push({
+        icono: 'carro', etiqueta: 'Parqueadero', valor: inm.parqueadero,
+        pildora: num ? plural(inm.parqueadero, 'parqueadero') : 'Parqueadero ' + inm.parqueadero.toLowerCase(),
+      });
+    }
+    if (hayNum(inm.estrato)) tarjetas.push({ icono: 'estrato', etiqueta: 'Estrato', valor: inm.estrato, pildora: 'Estrato ' + inm.estrato });
+    if (hayNum(inm.piso)) {
+      const casa = esCasa(inm.tipo);
+      tarjetas.push({ icono: 'piso', etiqueta: casa ? 'Niveles' : 'Piso', valor: inm.piso, pildora: (casa ? 'Niveles: ' : 'Piso ') + inm.piso });
+    }
+    const admin = aNumero(inm.administracion);
+    if (admin) tarjetas.push({ icono: 'admin', etiqueta: 'Administración', valor: pesos(admin), unidad: '/mes', pildora: 'Administración ' + pesos(admin) + '/mes' });
+
+    // Detalles cualitativos (círculos con ícono)
+    const detalles = [];
+    const pago = formaPago(inm.credito);
+    if (pago) detalles.push({ icono: 'credito', texto: pago });
+    if (esSi(inm.ascensor)) detalles.push({ icono: 'ascensor', texto: 'Con ascensor' });
+
+    return {
+      titulo: (inm.tipo || 'Inmueble') + cuando,
+      proyecto: inm.proyecto || '',
+      ubicacion: ubicacionTexto(inm),
+      precios, tarjetas, detalles,
+      descripcion: inm.observaciones || '',
+      noDisponible: inm.estado && !/disponible/i.test(inm.estado) ? inm.estado : '',
+    };
+  }
+
+  /* =============================================================
    * 4. RENDER
    * ============================================================= */
   function render(inm) {
-    const precio = aNumero(inm.precio);
-    const canon  = aNumero(inm.canon);
-
-    let precioHtml;
-    if (precio) {
-      precioHtml = esc(pesos(precio))
-        + (canon ? '<span class="precio-2">Arriendo ' + esc(pesos(canon)) + '/mes</span>' : '');
-    } else if (canon) {
-      precioHtml = esc(pesos(canon)) + '<small>/mes</small>';
-    } else {
-      precioHtml = 'Consultar';
-    }
-
-    const titulo = inm.proyecto || ((inm.tipo || 'Inmueble') + (inm.barrio ? ' en ' + inm.barrio : ''));
-    const ubicacion = [inm.barrio, CFG.CIUDAD, CFG.PAIS].filter(Boolean).join(', ');
+    const v = construirVista(inm);
     const fotos = inm.fotos;
-    const noDisponible = inm.estado && !/disponible/i.test(inm.estado) ? inm.estado : '';
 
-    /* Hero + miniaturas */
+    /* Galería: foto principal deslizable + miniaturas */
     const slides = fotos.length
-      ? fotos.map((f, i) => '<div class="hero-slide"><img src="' + esc(f) + '" alt="' + esc(titulo) + ' — foto ' + (i + 1)
+      ? fotos.map((f, i) => '<div class="hero-slide"><img src="' + esc(f) + '" alt="' + esc(v.titulo) + ' — foto ' + (i + 1)
           + '" referrerpolicy="no-referrer" decoding="async"' + (i ? ' loading="lazy"' : '') + '></div>').join('')
       : '<div class="hero-vacio">Sin fotos</div>';
 
@@ -193,65 +305,85 @@
         + '</button>';
     }).join('') : '';
 
-    /* Ficha técnica */
-    const principales = [];
-    if (inm.habitaciones && inm.habitaciones !== '0') principales.push([IC.cama, inm.habitaciones + ' Hab.']);
-    if (inm.banos && inm.banos !== '0')               principales.push([IC.bano, inm.banos + ' Baños']);
-    if (inm.area && inm.area !== '0')                 principales.push([IC.area, inm.area + ' m²']);
+    /* Precio */
+    const precioHtml = '<section class="precio-card' + (v.precios.length > 1 ? ' dos' : '') + '" aria-label="Precio">'
+      + v.precios.map(p => '<div class="precio-col"><p class="precio-etq">' + esc(p.etiqueta) + '</p>'
+        + '<p class="precio-val">' + esc(p.valor) + (p.sufijo ? '<small>' + esc(p.sufijo) + '</small>' : '') + '</p></div>').join('')
+      + '</section>';
 
-    const chips = [];
-    if (inm.servicio) chips.push(inm.servicio);
-    if (inm.estrato && inm.estrato !== '0') chips.push('Estrato ' + inm.estrato);
-    if (inm.piso && inm.piso !== '0') chips.push((esCasa(inm.tipo) ? 'Niveles: ' : 'Piso ') + inm.piso);
-    if (inm.parqueadero && !/^(0|no)/i.test(inm.parqueadero)) {
-      chips.push(/^\d+$/.test(inm.parqueadero) ? 'Parqueaderos: ' + inm.parqueadero : 'Parqueadero ' + inm.parqueadero.toLowerCase());
-    }
-    const pago = formaPago(inm.credito);
-    if (pago) chips.push(pago);
+    /* Tarjetas deslizables */
+    const tarjetasHtml = v.tarjetas.length
+      ? '<section class="tarjetas" aria-label="Datos del inmueble"><div class="tarjetas-track">'
+        + v.tarjetas.map(t => '<div class="tarjeta"><span class="ico">' + ico(t.icono) + '</span>'
+          + '<span class="tarjeta-etq">' + esc(t.etiqueta) + '</span>'
+          + '<span class="tarjeta-val' + (String(t.valor).length > 7 ? ' largo' : '') + '">' + esc(t.valor)
+          + (t.unidad ? '<small>' + esc(t.unidad) + '</small>' : '') + '</span></div>').join('')
+        + '</div></section>'
+      : '';
+
+    /* Descripción + detalles */
+    const detallesHtml = v.detalles.length
+      ? '<div class="detalles' + (v.descripcion ? '' : ' solo') + '">'
+        + v.detalles.map(d => '<div class="detalle"><span class="ico">' + ico(d.icono) + '</span><span>' + esc(d.texto) + '</span></div>').join('')
+        + '</div>'
+      : '';
+    const cardHtml = (v.descripcion || v.detalles.length)
+      ? '<section class="card">'
+        + '<h2 class="sec-titulo">' + (v.descripcion ? 'Descripción' : 'Detalles') + '</h2><div class="cab-linea"></div>'
+        + (v.descripcion
+            ? '<p class="desc" id="desc">' + esc(v.descripcion) + '</p><button type="button" class="leer-mas" id="leer-mas" hidden>Leer más…</button>'
+            : '')
+        + detallesHtml
+        + '</section>'
+      : '';
+
+    const dominio = (() => { try { return new URL(CFG.MARCA_URL).host; } catch (e) { return 'miraleads.pro'; } })();
 
     $app.innerHTML =
-      '<section class="hero" aria-label="Fotos del inmueble">'
-      +   '<div class="hero-top">'
-      +     '<a class="chip-marca" href="' + esc(CFG.MARCA_URL || '#') + '" target="_blank" rel="noopener"><i></i>' + esc(CFG.MARCA || '') + '</a>'
-      +     '<button type="button" class="btn-circulo" id="btn-compartir-top" aria-label="Compartir ficha">' + IC.share + '</button>'
+      '<header class="cab">'
+      +   '<button type="button" class="btn-circulo cab-share" id="btn-compartir-top" aria-label="Compartir ficha">' + ico('share') + '</button>'
+      +   '<h1 class="titulo">' + esc(v.titulo) + '</h1>'
+      +   '<div class="cab-linea"></div>'
+      +   (v.proyecto ? '<p class="proyecto">' + esc(v.proyecto) + '</p>' : '')
+      +   (v.ubicacion ? '<p class="ubicacion">' + ico('pin') + '<span>' + esc(v.ubicacion) + '</span></p>' : '')
+      + '</header>'
+
+      + '<section class="galeria' + (miniaturas ? ' con-thumbs' : '') + '" aria-label="Fotos del inmueble">'
+      +   '<div class="hero">'
+      +     '<div class="hero-track" id="hero-track">' + slides + '</div>'
+      +     (fotos.length > 1 ? '<span class="contador" id="contador">1 / ' + fotos.length + '</span>' : '')
+      +     (v.noDisponible ? '<span class="etiqueta-estado">' + esc(v.noDisponible) + '</span>' : '')
       +   '</div>'
-      +   '<div class="hero-track" id="hero-track">' + slides + '</div>'
-      +   (noDisponible ? '<span class="etiqueta-estado">' + esc(noDisponible) + '</span>' : '')
       +   (miniaturas ? '<div class="thumbs">' + miniaturas + '</div>' : '')
       + '</section>'
 
-      + '<article class="cuerpo' + (miniaturas ? ' con-thumbs' : '') + '">'
-      +   '<div class="fila-top">'
-      +     (inm.tipo ? '<span class="tag">' + esc(inm.tipo) + '</span>' : '<span></span>')
-      +     '<p class="precio">' + precioHtml + '</p>'
-      +   '</div>'
-      +   '<h1 class="titulo">' + esc(titulo) + '</h1>'
-      +   (ubicacion ? '<p class="ubicacion">' + IC.pin + '<span>' + esc(ubicacion) + '</span></p>' : '')
-      +   (principales.length
-            ? '<div class="specs">' + principales.map(p => '<div class="spec">' + p[0] + '<span>' + esc(p[1]) + '</span></div>').join('') + '</div>'
+      + precioHtml
+      + tarjetasHtml
+      + cardHtml
+
+      + '<footer class="pie">'
+      +   '<div><span class="pie-kicker">Ficha creada con</span>'
+      +     '<div class="marca">' + OJO + '<b>mira</b><span>leads</span></div></div>'
+      +   '<a class="pie-cta" href="' + esc(CFG.MARCA_URL || '#') + '" target="_blank" rel="noopener">Conoce Mira Leads</a>'
+      + '</footer>'
+
+      + '<div class="barra">'
+      +   '<button type="button" class="btn-compartir" id="btn-compartir">' + ico('share') + 'Compartir ficha</button>'
+      +   (window.FichaImagen
+            ? '<button type="button" class="btn-imagen" id="btn-imagen" aria-label="Crear imagen para estados y redes">'
+              + ico('imagen') + '<span>Imagen</span></button>'
             : '')
-      +   (chips.length ? '<div class="chips">' + chips.map(c => '<span>' + esc(c) + '</span>').join('') + '</div>' : '')
-      +   (inm.observaciones
-            ? '<section class="seccion"><h2>Descripción</h2>'
-              + '<p class="desc" id="desc">' + esc(inm.observaciones) + '</p>'
-              + '<button type="button" class="leer-mas" id="leer-mas" hidden>Leer más…</button></section>'
-            : '')
-      +   '<p class="credito">Ficha generada con <a href="' + esc(CFG.MARCA_URL || '#') + '" target="_blank" rel="noopener">' + esc(CFG.MARCA || '') + '</a></p>'
-      + '</article>'
+      + '</div>';
 
-      + '<div class="barra"><button type="button" class="btn-compartir" id="btn-compartir">' + IC.share + 'Compartir ficha</button></div>';
+    // Pestaña del navegador (WhatsApp no lee esto: lo hace functions/index.js)
+    document.title = v.titulo + (v.ubicacion ? ' · ' + v.ubicacion : '') + ' · ' + (CFG.MARCA || 'Ficha');
 
-    // Pestaña del navegador (WhatsApp no lee esto: ver nota en index.html)
-    document.title = titulo + ' · ' + (CFG.MARCA || 'Ficha');
-
-    conectarEventos(inm, titulo, precioHtml);
+    conectarEventos(inm, v);
   }
 
   /* =============================================================
    * 5. INTERACCIÓN
    * ============================================================= */
-  /** Singular/plural simple: plural(2,'baño') → "2 baños". */
-  function plural(n, palabra) { return n + ' ' + palabra + (Number(n) === 1 ? '' : 's'); }
 
   /** Link canónico de la ficha: sin parámetros ajenos (fbclid, utm…) y siempre con ?codigo=. */
   function linkCanonico() {
@@ -276,47 +408,50 @@
     const lineas = [];
     if (precio) lineas.push('Precio de venta: ' + pesos(precio));
     if (canon)  lineas.push((precio ? 'Precio de arriendo: ' : 'Canon de arriendo: ') + pesos(canon) + '/mes');
-    if (inm.area && inm.area !== '0')                 lineas.push(inm.area + ' m²');
-    if (inm.habitaciones && inm.habitaciones !== '0') lineas.push(plural(inm.habitaciones, 'alcoba'));
-    if (inm.banos && inm.banos !== '0')               lineas.push(plural(inm.banos, 'baño'));
+    if (hayNum(inm.area))         lineas.push(inm.area + ' m²');
+    if (hayNum(inm.habitaciones)) lineas.push(plural(inm.habitaciones, 'alcoba'));
+    if (hayNum(inm.banos))        lineas.push(plural(inm.banos, 'baño'));
     if (inm.parqueadero && !/^(0|no)/i.test(inm.parqueadero)) {
       lineas.push(/^\d+$/.test(inm.parqueadero) ? plural(inm.parqueadero, 'parqueadero') : 'Parqueadero ' + inm.parqueadero.toLowerCase());
     }
-    if (inm.estrato && inm.estrato !== '0') lineas.push('Estrato: ' + inm.estrato);
+    if (hayNum(inm.estrato)) lineas.push('Estrato: ' + inm.estrato);
 
-    const titulo = (inm.tipo || 'Inmueble') + cuando + (inm.barrio ? ' · ' + inm.barrio : '');
+    const donde = ubicacionTexto(inm);
+    const titulo = (inm.tipo || 'Inmueble') + cuando + (donde ? ' · ' + donde : '');
     return '*' + titulo + '*\n'
       + lineas.map(l => '• ' + l).join('\n')
       + '\n• Más información y fotos:\n'
       + linkCanonico();
   }
 
-  function conectarEventos(inm, titulo) {
+  function conectarEventos(inm, v) {
     const fotos = inm.fotos;
     const track = document.getElementById('hero-track');
+    const indiceActual = () => Math.max(0, Math.round(track.scrollLeft / (track.clientWidth || 1)));
 
-    // Miniaturas ↔ carrusel
+    // Miniaturas y contador ↔ carrusel
     const thumbs = Array.from(document.querySelectorAll('.thumb'));
+    const contador = document.getElementById('contador');
     let raf = 0;
     track.addEventListener('scroll', () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        const i = Math.round(track.scrollLeft / track.clientWidth);
+        const i = indiceActual();
         thumbs.forEach(t => t.setAttribute('aria-current', String(Number(t.dataset.i) === i)));
+        if (contador) contador.textContent = (i + 1) + ' / ' + fotos.length;
       });
     }, { passive: true });
 
     thumbs.forEach(t => t.addEventListener('click', () => {
       const i = Number(t.dataset.i);
-      const esUltimaConMas = t.querySelector('.thumb-mas');
-      if (esUltimaConMas) { abrirVisor(fotos, i); return; }
+      if (t.querySelector('.thumb-mas')) { abrirVisor(fotos, i); return; }
       track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
     }));
 
     // Tocar la foto grande abre el visor
     track.addEventListener('click', e => {
       if (e.target.tagName !== 'IMG') return;
-      abrirVisor(fotos, Math.round(track.scrollLeft / track.clientWidth));
+      abrirVisor(fotos, indiceActual());
     });
 
     // Descripción con "Leer más"
@@ -343,6 +478,78 @@
     };
     document.getElementById('btn-compartir').addEventListener('click', compartir);
     document.getElementById('btn-compartir-top').addEventListener('click', compartir);
+
+    // Imagen para estados y redes
+    const btnImagen = document.getElementById('btn-imagen');
+    if (btnImagen) btnImagen.addEventListener('click', () => crearImagen(inm, v, fotos.length ? indiceActual() : -1, btnImagen));
+  }
+
+  /* ---- Imagen vertical para estados y redes ---- */
+  async function crearImagen(inm, v, indiceFoto, boton) {
+    const etiqueta = boton.querySelector('span');
+    const textoOriginal = etiqueta.textContent;
+    boton.disabled = true; etiqueta.textContent = 'Creando…';
+    try {
+      const sheet  = param('sheet').trim();
+      const codigo = (param('codigo') || param('id')).trim();
+      // Misma foto que se está viendo, en mayor resolución, desde nuestro propio dominio.
+      const fotoUrl = indiceFoto >= 0
+        ? '/foto?sheet=' + encodeURIComponent(sheet) + '&codigo=' + encodeURIComponent(codigo) + '&n=' + indiceFoto + '&w=1600'
+        : '';
+      const dominio = (() => { try { return new URL(CFG.MARCA_URL).host; } catch (e) { return 'miraleads.pro'; } })();
+      const blob = await window.FichaImagen.generar(v, { fotoUrl, colores: COLORES, dominio, iconoSvg });
+      mostrarImagen(blob, inm);
+    } catch (e) {
+      console.error('[ficha] imagen:', e);
+      aviso('No se pudo crear la imagen. Intenta de nuevo');
+    } finally {
+      boton.disabled = false; etiqueta.textContent = textoOriginal;
+    }
+  }
+
+  function mostrarImagen(blob, inm) {
+    const codigo = (param('codigo') || param('id')).trim() || 'inmueble';
+    const nombre = 'ficha-' + codigo.toLowerCase().replace(/[^a-z0-9_-]/g, '') + '.png';
+    const archivo = new File([blob], nombre, { type: 'image/png' });
+    const urlObj = URL.createObjectURL(blob);
+    const puedeCompartir = !!(navigator.canShare && navigator.canShare({ files: [archivo] }));
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-img';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-label', 'Imagen para estados y redes');
+    modal.innerHTML =
+      '<button type="button" class="btn-circulo modal-img-cerrar" aria-label="Cerrar">' + ico('cerrar') + '</button>'
+      + '<img src="' + urlObj + '" alt="Vista previa de la imagen">'
+      + '<p class="modal-img-nota">Formato vertical 1080×1920, listo para estados de WhatsApp, Instagram y Facebook.</p>'
+      + '<div class="modal-img-acciones">'
+      +   (puedeCompartir ? '<button type="button" class="primario" id="img-compartir">' + ico('share') + 'Compartir</button>' : '')
+      +   '<button type="button" id="img-guardar">' + ico('bajar') + 'Guardar imagen</button>'
+      + '</div>';
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+
+    const cerrar = () => {
+      modal.remove(); URL.revokeObjectURL(urlObj);
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', teclas);
+    };
+    const teclas = e => { if (e.key === 'Escape') cerrar(); };
+    document.addEventListener('keydown', teclas);
+    modal.querySelector('.modal-img-cerrar').addEventListener('click', cerrar);
+    modal.addEventListener('click', e => { if (e.target === modal) cerrar(); });
+
+    modal.querySelector('#img-guardar').addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = urlObj; a.download = nombre;
+      document.body.appendChild(a); a.click(); a.remove();
+      aviso('Imagen guardada');
+    });
+    const btnCompartir = modal.querySelector('#img-compartir');
+    if (btnCompartir) btnCompartir.addEventListener('click', async () => {
+      try { await navigator.share({ files: [archivo], text: mensajeCompartir(inm) }); }
+      catch (e) { if (!e || e.name !== 'AbortError') aviso('No se pudo compartir. Prueba con "Guardar imagen"'); }
+    });
   }
 
   /* ---- Visor de fotos a pantalla completa ---- */
@@ -354,7 +561,7 @@
     visor.setAttribute('aria-label', 'Fotos del inmueble');
     visor.innerHTML =
       '<div class="visor-top"><span id="visor-cont"></span>'
-      + '<button type="button" class="btn-circulo" id="visor-cerrar" aria-label="Cerrar">' + IC.cerrar + '</button></div>'
+      + '<button type="button" class="btn-circulo" id="visor-cerrar" aria-label="Cerrar">' + ico('cerrar') + '</button></div>'
       + '<div class="visor-track" id="visor-track">'
       + fotos.map(f => '<div class="visor-slide"><img src="' + esc(f) + '" alt="" referrerpolicy="no-referrer"></div>').join('')
       + '</div>';
@@ -397,12 +604,6 @@
     $app.innerHTML = '<div class="estado"><div class="icono" aria-hidden="true">🏠</div><h1>'
       + esc(titulo) + '</h1><p>' + esc(detalle) + '</p></div>';
     document.title = titulo + ' · ' + (CFG.MARCA || 'Ficha');
-  }
-
-  function aplicarColores() {
-    const r = document.documentElement.style;
-    if (CFG.COLOR_PRIMARIO) r.setProperty('--primario', CFG.COLOR_PRIMARIO);
-    if (CFG.COLOR_ACENTO)   r.setProperty('--acento', CFG.COLOR_ACENTO);
   }
 
   async function iniciar() {
