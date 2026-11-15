@@ -416,23 +416,33 @@
 
     const dominio = (() => { try { return new URL(CFG.MARCA_URL).host; } catch (e) { return 'miraleads.pro'; } })();
 
-    $app.innerHTML =
-      '<header class="cab">'
-      +   '<button type="button" class="btn-circulo cab-share" id="btn-compartir-top" aria-label="Compartir ficha">' + ico('share') + '</button>'
-      +   '<h1 class="titulo">' + esc(v.titulo) + '</h1>'
-      +   '<div class="cab-linea"></div>'
-      +   (v.proyecto ? '<p class="proyecto">' + esc(v.proyecto) + '</p>' : '')
-      +   (v.ubicacion ? '<p class="ubicacion">' + ico('pin') + '<span>' + esc(v.ubicacion) + '</span></p>' : '')
-      + '</header>'
+    // Versión del bloque de título (a = sobre la foto · b = debajo, limpio · c = ubicación como titular).
+    // Se puede probar con ?v=a|b|c en el link; por defecto, a.
+    const VAR = ['a', 'b', 'c'].includes(param('v')) ? param('v') : 'a';
+    $app.dataset.titulo = VAR;
 
-      + '<section class="galeria' + (miniaturas ? ' con-thumbs' : '') + '" aria-label="Fotos del inmueble">'
+    const infoHtml = '<div class="info">'
+      + (VAR === 'c'
+          ? '<h1 class="titulo">' + esc(v.titulo) + '</h1>'
+            + (v.ubicacion ? '<p class="ubicacion">' + esc(v.ubicacion) + '</p>' : '')
+            + (v.proyecto ? '<p class="proyecto">' + esc(v.proyecto) + '</p>' : '')
+          : '<h1 class="titulo">' + esc(v.titulo) + '</h1>'
+            + (v.proyecto ? '<p class="proyecto">' + esc(v.proyecto) + '</p>' : '')
+            + (v.ubicacion ? '<p class="ubicacion">' + ico('pin') + '<span>' + esc(v.ubicacion) + '</span></p>' : ''))
+      + '</div>';
+
+    $app.innerHTML =
+      '<section class="galeria' + (miniaturas ? ' con-thumbs' : '') + '" aria-label="Fotos del inmueble">'
+      +   '<button type="button" class="btn-circulo cab-share" id="btn-compartir-top" aria-label="Compartir ficha">' + ico('share') + '</button>'
       +   '<div class="hero">'
       +     '<div class="hero-track" id="hero-track">' + slides + '</div>'
       +     (fotos.length > 1 ? '<span class="contador" id="contador">1 / ' + fotos.length + '</span>' : '')
       +     (v.noDisponible ? '<span class="etiqueta-estado">' + esc(v.noDisponible) + '</span>' : '')
+      +     (VAR === 'a' ? infoHtml : '')
       +   '</div>'
       +   (miniaturas ? '<div class="thumbs">' + miniaturas + '</div>' : '')
       + '</section>'
+      + (VAR !== 'a' ? infoHtml : '')
 
       + precioHtml
       + tarjetasHtml
@@ -501,6 +511,72 @@
       + linkCanonico();
   }
 
+  /** Vaivén (bounce) horizontal de las tarjetas, una sola vez, para invitar a deslizar. */
+  function nudgeTarjetas() {
+    const track = document.querySelector('.tarjetas-track');
+    if (!track || !('IntersectionObserver' in window)) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let parar = false, hecho = false;
+    const cancelar = () => { parar = true; };
+    ['touchstart', 'pointerdown', 'wheel'].forEach(ev => track.addEventListener(ev, cancelar, { passive: true, once: true }));
+
+    const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    const mover = (desde, hasta, ms) => new Promise(ok => {
+      const t0 = performance.now();
+      (function paso(ahora) {
+        if (parar) return ok();
+        const k = Math.min(1, (ahora - t0) / ms);
+        track.scrollLeft = desde + (hasta - desde) * ease(k);
+        k < 1 ? requestAnimationFrame(paso) : ok();
+      })(t0);
+    });
+    const espera = ms => new Promise(ok => setTimeout(ok, ms));
+
+    async function vaiven() {
+      const max = track.scrollWidth - track.clientWidth;
+      if (max < 12) return;                               // no hay nada que deslizar
+      const d = Math.min(64, max);
+      const snap = track.style.scrollSnapType;
+      track.style.scrollSnapType = 'none';                // el imán del carrusel estorba la animación
+      for (let i = 0; i < 2 && !parar; i++) {
+        await mover(0, d, 420);
+        await mover(d, 0, 520);
+        await espera(260);
+      }
+      track.scrollLeft = parar ? track.scrollLeft : 0;
+      track.style.scrollSnapType = snap;
+    }
+
+    const io = new IntersectionObserver(es => {
+      if (hecho || !es.some(e => e.isIntersecting)) return;
+      hecho = true; io.disconnect();
+      setTimeout(vaiven, 500);
+    }, { threshold: .25 });
+    io.observe(track);
+  }
+
+  /** La barra inferior queda oculta hasta que el usuario llega a la descripción (y ya no se vuelve a ocultar). */
+  function barraDiferida() {
+    const barra = document.querySelector('.barra');
+    if (!barra) return;
+    const meta = document.querySelector('.card') || document.querySelector('.pie');
+    let visible = false;
+    const revisar = () => {
+      if (visible) return;
+      const sinScroll = document.documentElement.scrollHeight <= window.innerHeight + 8;
+      const llego = meta && meta.getBoundingClientRect().top < window.innerHeight * 0.5;
+      if (sinScroll || llego) {
+        visible = true;
+        barra.classList.add('visible');
+        window.removeEventListener('scroll', revisar);
+        window.removeEventListener('resize', revisar);
+      }
+    };
+    window.addEventListener('scroll', revisar, { passive: true });
+    window.addEventListener('resize', revisar);
+    revisar();
+  }
+
   function conectarEventos(inm, v) {
     const fotos = inm.fotos;
     const track = document.getElementById('hero-track');
@@ -530,6 +606,11 @@
       if (e.target.tagName !== 'IMG') return;
       abrirVisor(fotos, indiceActual());
     });
+
+    // Aviso de que las tarjetas se deslizan: un pequeño vaivén cuando entran en pantalla
+    nudgeTarjetas();
+    // Barra Compartir/Imagen: aparece cuando el usuario ya llegó a la descripción
+    barraDiferida();
 
     // Descripción con "Leer más"
     const desc = document.getElementById('desc');

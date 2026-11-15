@@ -92,37 +92,14 @@ a { color: inherit; }
 .btn-circulo:active { transform: scale(.94); }
 .btn-circulo svg { width: 19px; height: 19px; }
 
-/* ---------- Cabecera ---------- */
-.cab {
-  position: relative; background: var(--papel);
-  border-radius: 0 0 32px 32px; box-shadow: var(--sombra);
-  padding: calc(18px + env(safe-area-inset-top)) 60px 16px;
-  text-align: center;
-}
-.cab-share { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: 12px; }
-
-.titulo {
-  font-size: 17px; font-weight: 600; line-height: 1.3;
-  letter-spacing: .07em; text-transform: uppercase; color: #38404c;
-}
-.cab-linea {
-  width: 120px; height: 2px; margin: 9px auto 0; border-radius: 2px;
-  background: linear-gradient(90deg, transparent, var(--acento-claro) 22%, var(--acento) 50%, var(--acento-claro) 78%, transparent);
-}
-.proyecto { margin-top: 8px; font-size: 14px; font-weight: 600; color: var(--tinta); }
-.ubicacion {
-  margin-top: 3px; display: flex; align-items: center; justify-content: center; gap: 6px;
-  font-size: 13px; color: var(--suave); line-height: 1.4;
-}
-.proyecto + .ubicacion { margin-top: 1px; }
-.ubicacion svg { width: 16px; height: 16px; flex: none; color: var(--tenue); }
-
-/* ---------- Galería ---------- */
-.galeria { position: relative; margin: 14px 16px 0; }
+/* ---------- Galería a pantalla completa (la foto es la protagonista) ---------- */
+.galeria { position: relative; margin: 0; }
 .galeria.con-thumbs { padding-bottom: 30px; }
+.cab-share { position: absolute; z-index: 3; top: calc(12px + env(safe-area-inset-top)); right: 14px; }
 
 .hero {
-  position: relative; aspect-ratio: 16 / 10; border-radius: 28px; overflow: hidden;
+  position: relative; width: 100%; aspect-ratio: 1 / 1; max-height: 62svh;
+  border-radius: 0 0 32px 32px; overflow: hidden;
   background: #d9dee4; box-shadow: var(--sombra);
 }
 .hero-track {
@@ -130,21 +107,69 @@ a { color: inherit; }
   scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
 .hero-track::-webkit-scrollbar { display: none; }
-.hero-slide { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; }
-.hero-slide img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+.hero-slide { position: relative; flex: 0 0 100%; height: 100%; scroll-snap-align: center; scroll-snap-stop: always; }
+.hero-slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
 .hero-vacio { height: 100%; display: grid; place-items: center; color: var(--tenue); font-size: 14px; }
 
 .contador {
-  position: absolute; top: 14px; right: 14px; z-index: 2;
+  position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 14px; z-index: 2;
   font-size: 12px; font-weight: 500; color: #fff; letter-spacing: .02em;
   padding: 4px 11px; border-radius: 999px;
   background: rgba(15, 20, 26, .55); backdrop-filter: blur(6px);
   font-variant-numeric: tabular-nums;
 }
 .etiqueta-estado {
-  position: absolute; z-index: 2; left: 14px; top: 14px;
+  position: absolute; z-index: 2; left: 14px; top: calc(50px + env(safe-area-inset-top));
   background: #b4232a; color: #fff; font-size: 12px; font-weight: 600;
   padding: 5px 13px; border-radius: 999px; letter-spacing: .02em;
+}
+
+/* ---------- Bloque de título (3 versiones; ?v=a|b|c) ---------- */
+.info { text-align: left; }
+.info .titulo { font-weight: 600; line-height: 1.2; }
+.info .proyecto { font-size: 13.5px; font-weight: 500; }
+.info .ubicacion { display: flex; align-items: center; gap: 6px; font-size: 13.5px; line-height: 1.35; }
+.info .ubicacion svg { width: 15px; height: 15px; flex: none; }
+
+/* A · sobre la foto: sin tarjeta, texto blanco con degradado suave */
+.app[data-titulo="a"] .hero::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 58%; z-index: 1; pointer-events: none;
+  background: linear-gradient(to top, rgba(8, 12, 16, .78), rgba(8, 12, 16, .35) 55%, transparent);
+}
+.app[data-titulo="a"] .info {
+  position: absolute; z-index: 2; left: 20px; right: 20px; bottom: 20px; color: #fff;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, .35);
+}
+.app[data-titulo="a"] .info .titulo { font-size: 23px; letter-spacing: -.01em; }
+.app[data-titulo="a"] .info .proyecto { margin-top: 4px; color: rgba(255, 255, 255, .92); }
+.app[data-titulo="a"] .info .ubicacion { margin-top: 3px; color: rgba(255, 255, 255, .85); }
+.app[data-titulo="a"] .info .ubicacion svg { color: rgba(255, 255, 255, .85); }
+/* En A las miniaturas van debajo de la foto, para no tapar el título */
+.app[data-titulo="a"] .galeria.con-thumbs { padding-bottom: 0; }
+.app[data-titulo="a"] .thumbs {
+  position: static; margin: 12px 16px 0; padding: 0; gap: 8px;
+  background: none; box-shadow: none; border-radius: 0;
+}
+.app[data-titulo="a"] .thumb { flex: 0 0 calc((100% - 32px) / 5); }
+
+/* B · debajo de la foto, limpio y alineado a la izquierda */
+.app[data-titulo="b"] .info { padding: 16px 22px 0; }
+.app[data-titulo="b"] .info .titulo { font-size: 21px; letter-spacing: -.01em; color: var(--tinta); }
+.app[data-titulo="b"] .info .proyecto { margin-top: 3px; color: var(--tinta); }
+.app[data-titulo="b"] .info .ubicacion { margin-top: 3px; color: var(--suave); }
+.app[data-titulo="b"] .info .ubicacion svg { color: var(--tenue); }
+
+/* C · la ubicación es el titular; el tipo de inmueble, una línea pequeña encima */
+.app[data-titulo="c"] .info { padding: 16px 22px 0; }
+.app[data-titulo="c"] .info .titulo {
+  font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--acento); font-weight: 600;
+}
+.app[data-titulo="c"] .info .ubicacion { margin-top: 5px; font-size: 21px; font-weight: 600; letter-spacing: -.01em; color: var(--tinta); }
+.app[data-titulo="c"] .info .proyecto { margin-top: 2px; color: var(--suave); }
+
+.cab-linea {
+  width: 120px; height: 2px; margin: 9px auto 0; border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--acento-claro) 22%, var(--acento) 50%, var(--acento-claro) 78%, transparent);
 }
 
 /* Miniaturas sobrepuestas */
@@ -189,6 +214,7 @@ a { color: inherit; }
 
 /* ---------- Tarjetas de datos (deslizables) ---------- */
 .tarjetas { margin-top: 8px; }
+.app[data-titulo="a"] .precio-card { margin-top: 14px; }
 .tarjetas-track {
   display: flex; gap: 12px; overflow-x: auto; padding: 6px 16px 20px;
   scroll-snap-type: x proximity; scroll-padding-left: 16px;
@@ -275,6 +301,13 @@ a { color: inherit; }
   background: rgba(255, 255, 255, .94); backdrop-filter: blur(10px);
   border-top: 1px solid var(--linea);
 }
+@media (max-width: 559px) {
+  .barra {
+    transform: translate(-50%, 110%); opacity: 0; visibility: hidden;
+    transition: transform .45s cubic-bezier(.2, .8, .2, 1), opacity .3s ease, visibility 0s linear .45s;
+  }
+  .barra.visible { transform: translate(-50%, 0); opacity: 1; visibility: visible; transition-delay: 0s; }
+}
 @media (min-width: 560px) {
   .barra { position: static; transform: none; max-width: none; backdrop-filter: none; }
 }
@@ -333,4 +366,5 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .spinner { animation-duration: 2s; }
   .hero-track, .visor-track, .tarjetas-track { scroll-behavior: auto; }
+  .barra { transition: none; }
 }
