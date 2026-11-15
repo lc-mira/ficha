@@ -192,15 +192,17 @@ a { color: inherit; }
 
 /* ---------- Precio ---------- */
 .precio-card {
-  margin: 12px 16px 0; padding: 13px 22px; border-radius: 26px; color: #fff;
+  margin: 12px 16px 0; padding: 13px 22px; border-radius: 26px; color: var(--acento-oscuro);
   display: flex; gap: 18px;
-  background: linear-gradient(135deg, var(--acento-oscuro), var(--acento) 55%, var(--acento-claro));
-  box-shadow: 0 14px 30px rgba(11, 68, 59, .25);
+  /* Verde atenuado: un tinte suave con borde fino. Destaca por el tamaño del número, no por el color. */
+  background: linear-gradient(135deg, var(--acento-suave), #f4f8f7);
+  border: 1px solid rgba(15, 91, 79, .14);
+  box-shadow: 0 6px 18px rgba(24, 36, 48, .07);
 }
 .precio-col { flex: 1 1 0; min-width: 0; }
-.precio-col + .precio-col { padding-left: 18px; border-left: 1px solid rgba(255, 255, 255, .25); }
+.precio-col + .precio-col { padding-left: 18px; border-left: 1px solid rgba(15, 91, 79, .18); }
 .precio-etq {
-  font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; opacity: .82;
+  font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--acento); opacity: .85;
 }
 .precio-val {
   margin-top: 2px; font-size: 30px; font-weight: 700; line-height: 1.15; letter-spacing: -.015em;

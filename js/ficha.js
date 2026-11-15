@@ -511,20 +511,25 @@
       + linkCanonico();
   }
 
-  /** Vaivén (bounce) horizontal de las tarjetas, una sola vez, para invitar a deslizar. */
+  /**
+   * Vaivén (bounce) horizontal de las tarjetas para invitar a deslizar.
+   * No se dispara al cargar: espera a que las tarjetas estén en pantalla Y el usuario lleve
+   * unos segundos sin hacer nada (sin scroll ni toques). Cualquier actividad reinicia la espera,
+   * y si el usuario ya tocó las tarjetas, no se muestra. Máximo 2 veces por visita.
+   */
   function nudgeTarjetas() {
     const track = document.querySelector('.tarjetas-track');
     if (!track || !('IntersectionObserver' in window)) return;
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    let parar = false, hecho = false;
-    const cancelar = () => { parar = true; };
-    ['touchstart', 'pointerdown', 'wheel'].forEach(ev => track.addEventListener(ev, cancelar, { passive: true, once: true }));
+
+    const ESPERA_1 = 3000, ESPERA_2 = 9000, MAX_VECES = 2;
+    let visible = false, explorado = false, animando = false, veces = 0, timer = 0;
 
     const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     const mover = (desde, hasta, ms) => new Promise(ok => {
       const t0 = performance.now();
       (function paso(ahora) {
-        if (parar) return ok();
+        if (explorado) return ok();
         const k = Math.min(1, (ahora - t0) / ms);
         track.scrollLeft = desde + (hasta - desde) * ease(k);
         k < 1 ? requestAnimationFrame(paso) : ok();
@@ -534,25 +539,45 @@
 
     async function vaiven() {
       const max = track.scrollWidth - track.clientWidth;
-      if (max < 12) return;                               // no hay nada que deslizar
+      if (max < 12) return;                                 // no hay nada que deslizar
       const d = Math.min(64, max);
       const snap = track.style.scrollSnapType;
-      track.style.scrollSnapType = 'none';                // el imán del carrusel estorba la animación
-      for (let i = 0; i < 2 && !parar; i++) {
+      track.style.scrollSnapType = 'none';                  // el imán del carrusel estorba la animación
+      animando = true;
+      for (let i = 0; i < 2 && !explorado; i++) {
         await mover(0, d, 420);
         await mover(d, 0, 520);
         await espera(260);
       }
-      track.scrollLeft = parar ? track.scrollLeft : 0;
+      animando = false;
+      if (!explorado) track.scrollLeft = 0;
       track.style.scrollSnapType = snap;
     }
 
-    const io = new IntersectionObserver(es => {
-      if (hecho || !es.some(e => e.isIntersecting)) return;
-      hecho = true; io.disconnect();
-      setTimeout(vaiven, 500);
-    }, { threshold: .25 });
-    io.observe(track);
+    function programar(ms) {
+      clearTimeout(timer);
+      if (explorado || veces >= MAX_VECES) return;
+      timer = setTimeout(async () => {
+        if (!visible || explorado) return;                  // si no se ven, el observador reprograma al aparecer
+        veces++;
+        await vaiven();
+        programar(ESPERA_2);
+      }, ms);
+    }
+
+    // Cualquier actividad del usuario = sigue explorando: se reinicia la espera
+    const actividad = () => { if (!animando) programar(ESPERA_1); };
+    ['scroll', 'touchstart', 'pointerdown', 'wheel', 'keydown'].forEach(ev =>
+      window.addEventListener(ev, actividad, { passive: true }));
+    // Si toca o desliza las tarjetas, ya sabe que se pueden mover: no se vuelve a mostrar
+    ['touchstart', 'pointerdown', 'wheel'].forEach(ev =>
+      track.addEventListener(ev, () => { explorado = true; clearTimeout(timer); }, { passive: true }));
+
+    new IntersectionObserver(es => {
+      visible = es.some(e => e.isIntersecting);
+      if (visible) programar(ESPERA_1);
+      else clearTimeout(timer);
+    }, { threshold: .25 }).observe(track);
   }
 
   /** La barra inferior queda oculta hasta que el usuario llega a la descripción (y ya no se vuelve a ocultar). */
