@@ -276,24 +276,14 @@ a { color: inherit; }
 .detalle .ico svg { width: 26px; height: 26px; }
 
 /* ---------- Pie de marca ---------- */
-.pie {
-  margin-top: 28px; padding: 20px 20px 22px;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  background: linear-gradient(#eceff3, #e2e7ec); border-top: 1px solid #dde2e8;
+.pie { margin-top: 26px; padding: 6px 20px 24px; text-align: center; }
+.pie-link {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 400;
+  color: var(--tenue); text-decoration: none; letter-spacing: .01em;
 }
-.pie-kicker {
-  display: block; font-size: 10px; font-weight: 600; letter-spacing: .16em;
-  text-transform: uppercase; color: var(--suave);
-}
-.marca { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 24px; letter-spacing: -.02em; color: #38404c; line-height: 1; }
-.marca svg { width: 28px; height: 28px; color: var(--acento); }
-.marca b { font-weight: 700; }
-.marca span { font-weight: 300; }
-.pie-cta {
-  flex: none; font-size: 12px; font-weight: 600; text-decoration: none; color: var(--acento);
-  border: 1.5px solid var(--acento); border-radius: 999px; padding: 9px 15px;
-}
-.pie-cta:active { background: var(--acento-suave); }
+.pie-link svg { width: 14px; height: 14px; color: var(--acento); opacity: .85; }
+.pie-link b { font-weight: 600; color: var(--suave); }
+.pie-link:active b { color: var(--acento); }
 
 /* ---------- Barra inferior ---------- */
 .barra {
@@ -319,7 +309,8 @@ a { color: inherit; }
 }
 .btn-compartir { flex: 1; border: 0; background: var(--acento); color: #fff; }
 .btn-compartir:active { filter: brightness(.92); }
-.btn-compartir svg, 
+.btn-compartir svg { width: 19px; height: 19px; }
+
 /* ---------- Visor de fotos ---------- */
 .visor { position: fixed; inset: 0; z-index: 50; background: #000; display: flex; flex-direction: column; }
 .visor-top {

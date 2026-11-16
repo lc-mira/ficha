@@ -447,9 +447,8 @@
       + cardHtml
 
       + '<footer class="pie">'
-      +   '<div><span class="pie-kicker">Ficha creada con</span>'
-      +     '<div class="marca">' + OJO + '<b>mira</b><span>leads</span></div></div>'
-      +   '<a class="pie-cta" href="' + esc(CFG.MARCA_URL || '#') + '" target="_blank" rel="noopener">Conoce Mira Leads</a>'
+      +   '<a class="pie-link" href="' + esc(CFG.MARCA_URL || '#') + '" target="_blank" rel="noopener">'
+      +     OJO + '<span>Ficha creada con <b>Mira Leads</b></span></a>'
       + '</footer>'
 
       + '<div class="barra">'
