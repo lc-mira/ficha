@@ -6,6 +6,10 @@
  * Es la imagen que anuncia og:image. Se sirve desde nuestro propio dominio
  * porque WhatsApp falla con los links de Drive o descarta fotos pesadas.
  *
+ * También la usa el panel (panel.miraleads.pro) para dibujar la imagen de estados en un
+ * <canvas>: por eso responde con CORS abierto (Access-Control-Allow-Origin: *). Son fotos
+ * públicas de un Espejo público y la ruta no recibe URLs, así que no abre nada nuevo.
+ *
  * Seguridad: NO recibe una URL. Busca la primera foto del inmueble en el Espejo
  * y solo la pide si es de Google Drive (HOSTS_FOTO), así no sirve de proxy abierto.
  */
@@ -40,6 +44,7 @@ export async function onRequestGet(context) {
         headers: {
           'Content-Type': tipo,
           'Cache-Control': 'public, max-age=86400',
+          'Access-Control-Allow-Origin': '*',
           'X-Content-Type-Options': 'nosniff',
         },
       });

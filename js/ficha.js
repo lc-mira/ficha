@@ -16,9 +16,9 @@
  *   1. Lista blanca y utilidades
  *   2. Lectura del Espejo
  *   3. construirVista(): datos ya listos para mostrar (los usan la página
- *      Y la imagen de js/imagen.js, así nunca se contradicen)
+ *      Y el panel (js/vista.js del repo lc-mira/panel), así nunca se contradicen)
  *   4. Render de la página
- *   5. Interacción (galería, compartir, imagen)
+ *   5. Interacción (galería, compartir)
  */
 
 'use strict';
@@ -157,7 +157,6 @@
     pin:     '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
     share:   '<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/>',
     cerrar:  '<path d="M6 6l12 12M18 6L6 18"/>',
-    imagen:  '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 3.5 3L15 13l5 4.5"/>',
     piscina: '<path d="M8 4v10M15 4v10"/><path d="M8 7h7M8 10.5h7"/><path d="M3 17c1.5 0 1.5 1.2 3 1.2S7.5 17 9 17s1.5 1.2 3 1.2 1.5-1.2 3-1.2 1.5 1.2 3 1.2 1.5-1.2 3-1.2"/>',
     gimnasio: '<path d="M6.5 8v8M17.5 8v8M3.5 10v4M20.5 10v4M6.5 12h11"/>',
     bbq: '<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 20l1.5-4M16 20l-1.5-4"/><path d="M9 3c-1 1.3 1 2 0 3.5M13 3c-1 1.3 1 2 0 3.5"/>',
@@ -178,14 +177,13 @@
     lavanderia: '<rect x="4.5" y="3.5" width="15" height="17" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M8 7h.01M11 7h.01"/>',
     amoblado: '<path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M3.5 11a1.5 1.5 0 0 1 3 0v3h11v-3a1.5 1.5 0 0 1 3 0v6h-17v-6z"/><path d="M6 17v2M18 17v2"/>',
     mascota: '<circle cx="7" cy="10" r="1.7"/><circle cx="11" cy="6.5" r="1.7"/><circle cx="15.5" cy="7" r="1.7"/><circle cx="18.5" cy="11" r="1.7"/><path d="M8 17c0-3 2-5 4-5s5 2 4.5 5c-.4 2-2 2-4.5 1-2.5 1-4.5 1-4-1z"/>',
-    bajar:   '<path d="M12 4v11"/><path d="M7.5 11l4.5 4.5 4.5-4.5"/><path d="M4.5 19.5h15"/>',
   };
   /** SVG en línea (hereda el color con currentColor). */
   function ico(nombre) {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
       + (IC_RUTAS[nombre] || '') + '</svg>';
   }
-  /** SVG suelto con color fijo, para dibujarlo en el canvas de js/imagen.js. */
+  /** SVG suelto con color fijo. */
   function iconoSvg(nombre, color) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="' + color
       + '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + (IC_RUTAS[nombre] || '') + '</svg>';
@@ -319,7 +317,7 @@
     if (canon)  precios.push({ etiqueta: precio ? 'Arriendo' : 'Canon de arriendo', valor: pesos(canon), sufijo: '/mes' });
     if (!precios.length) precios.push({ etiqueta: 'Precio', valor: 'Consultar', sufijo: '' });
 
-    // Tarjetas de datos (la página las desliza; la imagen usa las 3 primeras)
+    // Tarjetas de datos (la página las desliza)
     const tarjetas = [];
     if (hayNum(inm.area))         tarjetas.push({ icono: 'area',  etiqueta: 'Área',     valor: inm.area, unidad: 'm²' });
     if (hayNum(inm.habitaciones)) tarjetas.push({ icono: 'cama',  etiqueta: 'Alcobas',  valor: inm.habitaciones });
@@ -456,10 +454,6 @@
 
       + '<div class="barra">'
       +   '<button type="button" class="btn-compartir" id="btn-compartir">' + ico('share') + 'Compartir ficha</button>'
-      +   (window.FichaImagen
-            ? '<button type="button" class="btn-imagen" id="btn-imagen" aria-label="Crear imagen para estados y redes">'
-              + ico('imagen') + '<span>Imagen</span></button>'
-            : '')
       + '</div>';
 
     // Pestaña del navegador (WhatsApp no lee esto: lo hace functions/index.js)
@@ -634,7 +628,7 @@
 
     // Aviso de que las tarjetas se deslizan: un pequeño vaivén cuando entran en pantalla
     nudgeTarjetas();
-    // Barra Compartir/Imagen: aparece cuando el usuario ya llegó a la descripción
+    // Barra Compartir: aparece cuando el usuario ya llegó a la descripción
     barraDiferida();
 
     // Descripción con "Leer más"
@@ -662,83 +656,6 @@
     document.getElementById('btn-compartir').addEventListener('click', compartir);
     document.getElementById('btn-compartir-top').addEventListener('click', compartir);
 
-    // Imagen para estados y redes
-    const btnImagen = document.getElementById('btn-imagen');
-    if (btnImagen) btnImagen.addEventListener('click', () => crearImagen(inm, v, fotos.length ? indiceActual() : -1, btnImagen));
-  }
-
-  /* ---- Imagen vertical para estados y redes ---- */
-  async function crearImagen(inm, v, indiceFoto, boton) {
-    const etiqueta = boton.querySelector('span');
-    const textoOriginal = etiqueta.textContent;
-    boton.disabled = true; etiqueta.textContent = 'Creando…';
-    try {
-      const sheet  = param('sheet').trim();
-      const codigo = (param('codigo') || param('id')).trim();
-      // Misma foto que se está viendo, en mayor resolución, desde nuestro propio dominio.
-      const fotoUrl = indiceFoto >= 0
-        ? '/foto?sheet=' + encodeURIComponent(sheet) + '&codigo=' + encodeURIComponent(codigo) + '&n=' + indiceFoto + '&w=1600'
-        : '';
-      const dominio = (() => { try { return new URL(CFG.MARCA_URL).host; } catch (e) { return 'miraleads.pro'; } })();
-      const blob = await window.FichaImagen.generar(v, { fotoUrl, colores: COLORES, dominio, iconoSvg });
-      mostrarImagen(blob, inm);
-    } catch (e) {
-      console.error('[ficha] imagen:', e);
-      aviso('No se pudo crear la imagen. Intenta de nuevo');
-    } finally {
-      boton.disabled = false; etiqueta.textContent = textoOriginal;
-    }
-  }
-
-  function mostrarImagen(blob, inm) {
-    const codigo = (param('codigo') || param('id')).trim() || 'inmueble';
-    const nombre = 'ficha-' + codigo.toLowerCase().replace(/[^a-z0-9_-]/g, '') + '.png';
-    const archivo = new File([blob], nombre, { type: 'image/png' });
-    const urlObj = URL.createObjectURL(blob);
-    const puedeCompartir = !!(navigator.canShare && navigator.canShare({ files: [archivo] }));
-
-    const modal = document.createElement('div');
-    modal.className = 'modal-img';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-label', 'Imagen para estados y redes');
-    modal.innerHTML =
-      '<button type="button" class="btn-circulo modal-img-cerrar" aria-label="Cerrar">' + ico('cerrar') + '</button>'
-      + '<img src="' + urlObj + '" alt="Vista previa de la imagen">'
-      + '<p class="modal-img-nota">Al compartir, la imagen va con el texto y el enlace de la ficha. Si la guardas, usa «Copiar enlace» para pegarlo junto a la imagen.</p>'
-      + '<div class="modal-img-acciones">'
-      +   (puedeCompartir ? '<button type="button" class="primario" id="img-compartir">' + ico('share') + 'Compartir</button>' : '')
-      +   '<button type="button" id="img-enlace">' + ico('share') + 'Copiar enlace</button>'
-      +   '<button type="button" id="img-guardar">' + ico('bajar') + 'Guardar imagen</button>'
-      + '</div>';
-    document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden';
-
-    const cerrar = () => {
-      modal.remove(); URL.revokeObjectURL(urlObj);
-      document.body.style.overflow = '';
-      document.removeEventListener('keydown', teclas);
-    };
-    const teclas = e => { if (e.key === 'Escape') cerrar(); };
-    document.addEventListener('keydown', teclas);
-    modal.querySelector('.modal-img-cerrar').addEventListener('click', cerrar);
-    modal.addEventListener('click', e => { if (e.target === modal) cerrar(); });
-
-    modal.querySelector('#img-guardar').addEventListener('click', () => {
-      const a = document.createElement('a');
-      a.href = urlObj; a.download = nombre;
-      document.body.appendChild(a); a.click(); a.remove();
-      aviso('Imagen guardada');
-    });
-    modal.querySelector('#img-enlace').addEventListener('click', async () => {
-      const txt = mensajeCompartir(inm);
-      try { await navigator.clipboard.writeText(txt); aviso('Texto con enlace copiado'); }
-      catch (e) { aviso('No se pudo copiar'); }
-    });
-    const btnCompartir = modal.querySelector('#img-compartir');
-    if (btnCompartir) btnCompartir.addEventListener('click', async () => {
-      try { await navigator.share({ files: [archivo], text: mensajeCompartir(inm) }); }
-      catch (e) { if (!e || e.name !== 'AbortError') aviso('No se pudo compartir. Prueba con "Guardar imagen"'); }
-    });
   }
 
   /* ---- Visor de fotos a pantalla completa ---- */

@@ -313,17 +313,13 @@ a { color: inherit; }
 @media (min-width: 560px) {
   .barra { position: static; transform: none; max-width: none; backdrop-filter: none; }
 }
-.btn-compartir, .btn-imagen {
+.btn-compartir {
   height: 52px; border-radius: 16px; font-size: 15px; font-weight: 600;
   display: flex; align-items: center; justify-content: center; gap: 9px;
 }
-.btn-compartir { flex: 1.35; border: 0; background: var(--acento); color: #fff; }
+.btn-compartir { flex: 1; border: 0; background: var(--acento); color: #fff; }
 .btn-compartir:active { filter: brightness(.92); }
-.btn-imagen { flex: 1; background: #fff; color: var(--acento); border: 1.5px solid var(--acento); }
-.btn-imagen:active { background: var(--acento-suave); }
-.btn-imagen[disabled] { opacity: .6; }
-.btn-compartir svg, .btn-imagen svg { width: 19px; height: 19px; }
-
+.btn-compartir svg, 
 /* ---------- Visor de fotos ---------- */
 .visor { position: fixed; inset: 0; z-index: 50; background: #000; display: flex; flex-direction: column; }
 .visor-top {
@@ -335,27 +331,6 @@ a { color: inherit; }
 .visor-track::-webkit-scrollbar { display: none; }
 .visor-slide { flex: 0 0 100%; scroll-snap-align: center; display: grid; place-items: center; }
 .visor-slide img { max-width: 100%; max-height: 100%; object-fit: contain; }
-
-/* ---------- Vista previa de la imagen para estados ---------- */
-.modal-img {
-  position: fixed; inset: 0; z-index: 70; padding: 20px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
-  background: rgba(12, 16, 20, .86);
-}
-.modal-img img {
-  max-width: 100%; max-height: 68dvh; border-radius: 18px; background: #fff;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
-}
-.modal-img-nota { max-width: 360px; text-align: center; font-size: 12.5px; line-height: 1.5; color: rgba(255, 255, 255, .75); }
-.modal-img-acciones { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 380px; }
-.modal-img-acciones button {
-  flex: 1; height: 50px; border-radius: 15px; border: 0; font-size: 14.5px; font-weight: 600;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: #fff; color: var(--acento);
-}
-.modal-img-acciones button.primario { background: var(--acento); color: #fff; }
-.modal-img-acciones svg { width: 18px; height: 18px; }
-.modal-img-cerrar { position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px; }
 
 /* ---------- Aviso (toast) ---------- */
 .aviso {
