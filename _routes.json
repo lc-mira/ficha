@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/", "/foto"],
+  "include": ["/", "/foto", "/datos"],
   "exclude": []
 }
