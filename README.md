@@ -12,12 +12,17 @@ El repo no contiene nada de ningún cliente: el cliente llega en la URL.
 | Archivo | Qué hace |
 |---|---|
 | `index.html`, `css/ficha.css`, `js/ficha.js` | La ficha. Lee la hoja **Espejo** pública con la Google Sheets API. |
-| `js/imagen.js` | Genera la imagen PNG vertical (1080×1920) para estados y redes; el pie de marca es pequeño y sin enlace. |
 | `js/config.js` | API key (restringida por referrer a `ficha.miraleads.pro`), marca y colores. |
 | `functions/index.js` | Cloudflare Pages Function. Reemplaza las etiquetas `og:` del HTML con las del inmueble para que WhatsApp muestre la vista previa. |
-| `functions/foto.js` | Sirve la foto desde nuestro dominio: por defecto la principal a ~800 px (vista previa); con `?n=` otra foto y con `?w=` 800/1200/1600 px (imagen PNG). |
+| `functions/foto.js` | Sirve la foto desde nuestro dominio: por defecto la principal a ~800 px (vista previa); con `?n=` otra foto y con `?w=` 800/1200/1600 px. Con CORS abierto: la usa el panel para dibujar la imagen de estados. |
 | `functions/_lib/inmueble.js` | Lectura del Espejo en el servidor, textos de la vista previa y lista de hosts de foto permitidos. |
 | `_routes.json` | Solo `/` y `/foto` ejecutan funciones; el resto son archivos estáticos. |
+
+## Imagen para estados
+
+Ya no se genera aquí: vive en el panel de cada agente (repo `lc-mira/panel`, botón «Imagen estados» de cada
+inmueble). La imagen lleva el link al inmueble en el **catálogo del agente titular**, no a esta ficha.
+La ficha sigue sirviendo la foto en `/foto` (con CORS) para que el panel pueda dibujarla.
 
 ## Comodidades por palabras clave
 
