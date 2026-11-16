@@ -29,6 +29,20 @@ const CAMPOS = {
   fotos:        h => h.includes('foto'),
 };
 
+/**
+ * Campos públicos completos, solo para /datos (el panel los usa para copiar una ficha ajena).
+ * Sigue sin incluir captación, link externo, encargado, celular, notas, documentos ni comisión.
+ */
+export const CAMPOS_COMPLETOS = {
+  ...CAMPOS,
+  proyecto:      h => h.startsWith('proyecto') || h.startsWith('nombre'),
+  parqueadero:   h => h.startsWith('parqueadero'),
+  piso:          h => h.includes('piso') && !h.includes('precio'),
+  estado:        h => h === 'estado',
+  credito:       h => h.includes('credito'),
+  observaciones: h => h.startsWith('observacion'),
+};
+
 /** Solo se aceptan fotos de estos hosts (evita que /foto sea un proxy abierto). */
 const HOSTS_FOTO = ['drive.google.com', 'lh3.googleusercontent.com', 'drive.usercontent.google.com'];
 
@@ -71,7 +85,7 @@ async function obtenerApiKey(env, origin) {
  * @returns {Promise<{inm?: object, motivo?: string}>}
  *   motivo: 'sin-clave' | 'hoja' | 'formato' | 'no-encontrado'
  */
-export async function buscarInmueble(env, origin, sheet, codigo) {
+export async function buscarInmueble(env, origin, sheet, codigo, campos = CAMPOS) {
   const key = await obtenerApiKey(env, origin);
   if (!key) return { motivo: 'sin-clave' };
 
@@ -96,8 +110,8 @@ export async function buscarInmueble(env, origin, sheet, codigo) {
   const idx = {};
   filas[0].forEach((encabezado, i) => {
     const h = norm(encabezado);
-    Object.keys(CAMPOS).forEach(clave => {
-      if (idx[clave] === undefined && CAMPOS[clave](h)) idx[clave] = i;
+    Object.keys(campos).forEach(clave => {
+      if (idx[clave] === undefined && campos[clave](h)) idx[clave] = i;
     });
   });
   if (idx.id === undefined) return { motivo: 'formato' };
